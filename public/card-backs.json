@@ -1,0 +1,18 @@
+{
+  "_comment": "Add new card-back designs here over time — no app redeploy needed. Each design needs an id, a display name (name = 中文, en = English), and a CSS `background` value. Edit this file on the host and players get the new backs on next load.",
+  "version": 1,
+  "designs": [
+    {
+      "id": "lantern-festival",
+      "name": "灯节",
+      "en": "Lantern Festival",
+      "css": "radial-gradient(circle at 50% 30%, rgba(232,206,107,.55) 0 6px, transparent 7px), linear-gradient(135deg, #c8341f, #7a1810)"
+    },
+    {
+      "id": "jade-bamboo",
+      "name": "翠竹",
+      "en": "Jade Bamboo",
+      "css": "repeating-linear-gradient(90deg, rgba(79,167,133,.5) 0 2px, transparent 2px 12px), linear-gradient(135deg, #0c4a36, #062417)"
+    }
+  ]
+}

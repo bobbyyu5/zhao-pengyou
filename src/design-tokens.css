@@ -1,0 +1,47 @@
+/* 找朋友 Zhao Pengyou — design tokens
+   Single source of visual truth. Claude Design references these; Code imports them.
+   Thesis: Chinese family game about finding a hidden friend. Legibility-first for older
+   players. Signature = the cinnabar 友 seal (app identity + "friend revealed" stamp). */
+
+:root {
+  /* ---- Color: pine felt · ivory cards · cinnabar · imperial brass ---- */
+  --felt-deep:    #062417;  /* table base, darkest */
+  --felt:         #0B3D2E;  /* table surface */
+  --felt-rail:    #0F5238;  /* raised rail / panels */
+  --jade:         #4FA785;  /* secondary highlight, legal-move glow */
+  --ivory:        #F7F2E7;  /* card face */
+  --ivory-edge:   #E7DEC9;  /* card edge / inner shadow */
+  --ink:          #1A1A17;  /* text on ivory, black suits */
+  --cinnabar:     #C8341F;  /* brand red, red suits, the 友 seal */
+  --cinnabar-deep:#9E2414;  /* seal shadow / pressed state */
+  --brass:        #C9A227;  /* trump + level accents (imperial) */
+  --brass-light:  #E8CE6B;  /* brass highlight */
+  --paper-line:   rgba(247,242,231,0.14); /* hairline dividers on felt */
+
+  /* ---- Type ---- */
+  /* Wordmark / splash 找朋友: calligraphic. Headings: serif. UI/body: sans. Data: mono. */
+  --font-brand:  "Ma Shan Zheng", "Noto Serif SC", serif;
+  --font-head:   "Noto Serif SC", "Songti SC", serif;
+  --font-ui:     "Noto Sans SC", "Inter", system-ui, sans-serif;
+  --font-data:   "DM Mono", "Roboto Mono", ui-monospace, monospace; /* points, levels, room code */
+
+  --fs-wordmark: 40px;  --fs-h1: 24px;  --fs-h2: 18px;
+  --fs-body: 15px;  --fs-cap: 12px;  --fs-data: 20px;
+  --fw-reg: 400; --fw-med: 500; --fw-bold: 700;
+
+  /* ---- Card face scale (legibility for older players: big corner index) ---- */
+  --card-w: 56px; --card-h: 78px; --card-radius: 8px;
+  --card-index: 22px;        /* corner rank — oversized on purpose */
+  --card-point-dot: #1F8A5B; /* point-card marker (5/10/K) */
+
+  /* ---- Space · radius · elevation ---- */
+  --r-sm: 8px; --r-md: 14px; --r-lg: 20px; --r-pill: 999px;
+  --sp-1: 4px; --sp-2: 8px; --sp-3: 12px; --sp-4: 16px; --sp-6: 24px;
+  --shadow-card: 0 2px 6px rgba(0,0,0,.35);
+  --shadow-lift: 0 10px 22px rgba(0,0,0,.45);  /* selected/lifted card */
+  --shadow-seal: 0 4px 14px rgba(158,36,20,.5);
+
+  /* ---- Suit colors (standard, but red = cinnabar for brand cohesion) ---- */
+  --suit-red: var(--cinnabar);
+  --suit-black: var(--ink);
+}

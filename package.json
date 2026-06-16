@@ -1,0 +1,26 @@
+{
+  "name": "zhao-pengyou",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "找朋友 Zhao Pengyou — server-authoritative Tractor/升级 card game (PWA + room-code multiplayer)",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "node --test engine/tests/",
+    "smoke": "node server/smoke.mjs",
+    "server": "node server/server.js",
+    "start": "node server/server.js"
+  },
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "socket.io": "^4.7.5",
+    "socket.io-client": "^4.7.5"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.3.1",
+    "vite": "^5.4.2"
+  }
+}
