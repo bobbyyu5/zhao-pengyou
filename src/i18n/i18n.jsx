@@ -129,6 +129,63 @@ const DICT = {
   chooseBack: { zh: "选择牌背", en: "Choose card back", ja: "カード裏を選択" },
   backsUpdateNote: { zh: "新牌背会不定期更新（无需重新安装）。", en: "New designs arrive over time automatically — no reinstall needed.", ja: "新しいデザインは随時自動で追加されます（再インストール不要）。" },
 
+  // rules / scoring reference
+  rulesBtn: { zh: "规则", en: "Rules", ja: "ルール" },
+  rulesTitle: { zh: "规则与算分", en: "Rules & Scoring", ja: "ルールと得点" },
+  rulesObjectiveH: { zh: "目标", en: "Objective", ja: "目的" },
+  rulesObjective: {
+    zh: "庄家方守分，抓分方抢分。抓分方拿满“过庄线”就赢这手并坐庄。",
+    en: "The dealer's side defends points; the grabbers try to capture them. Reach the pass line and the grabbers win the hand and take the deal.",
+    ja: "親側は点を守り、得点側は点を奪います。ラインに達すれば得点側がその局に勝ち、親を奪います。",
+  },
+  rulesPassH: { zh: "过庄线 — 赢这手需要多少分", en: "Pass line — points needed to win", ja: "ライン — 勝つのに必要な点" },
+  rulesPass: {
+    zh: "本桌 {p} 副牌，共 {tp} 分。抓分方需 ≥ {line} 分翻庄。",
+    en: "This table: {p} decks, {tp} points total. Grabbers need ≥ {line} to flip the dealer.",
+    ja: "このテーブル：{p}デッキ、計{tp}点。得点側は{line}点以上で親を倒します。",
+  },
+  rulesTiersH: { zh: "算分（按本桌分线）", en: "Scoring (this table's line)", ja: "得点（このラインで）" },
+  rulesTierLose: {
+    zh: "抓 ≥ {line}：庄家失败 — 庄 −2 级，友 −1 级",
+    en: "grabbers ≥ {line}: dealer loses — dealer −2 levels, friend −1",
+    ja: "得点 {line}以上：親の負け — 親−2、友−1",
+  },
+  rulesTierWin: {
+    zh: "{half}–{lineless}：庄家胜 — 庄 +2，友 +1",
+    en: "{half}–{lineless}: dealer wins — dealer +2, friend +1",
+    ja: "{half}〜{lineless}：親の勝ち — 親+2、友+1",
+  },
+  rulesTierSmall: {
+    zh: "1–{halfless}：小光 — 庄 +3，友 +2",
+    en: "1–{halfless}: small sweep — dealer +3, friend +2",
+    ja: "1〜{halfless}：小光 — 親+3、友+2",
+  },
+  rulesTierBig: {
+    zh: "0：大光 — 庄 +4，友 +3",
+    en: "0: big sweep — dealer +4, friend +3",
+    ja: "0：大光 — 親+4、友+3",
+  },
+  rulesWinH: { zh: "如何赢得本轮", en: "Winning the round", ja: "ラウンドの勝ち方" },
+  rulesWin: {
+    zh: "庄家方每赢一手升级（6→7→…→A）。先打过 A 者赢得本轮。",
+    en: "The dealer's side climbs a level each win (6→7→…→A). First side to pass A wins the round.",
+    ja: "親側は勝つごとに昇級（6→7→…→A）。最初にAを越えた側がラウンド勝利。",
+  },
+  rulesTrumpH: { zh: "主牌大小", en: "Trump order (high → low)", ja: "切札の強さ（強→弱）" },
+  rulesTrump: {
+    zh: "大王 > 小王 > 主级牌(本花) > 主级牌(他花) > 主花色 A→2 > 其它花色 A→2",
+    en: "Big joker > small joker > level card (trump suit) > level cards (off-suit) > trump suit A→2 > other suits A→2",
+    ja: "大王 > 小王 > 級札(切札スート) > 級札(他スート) > 切札スートA→2 > 他スートA→2",
+  },
+  rulesPointsH: { zh: "分牌", en: "Point cards", ja: "点札" },
+  rulesPoints: { zh: "5 = 5 分 · 10 = 10 分 · K = 10 分", en: "5 = 5 pts · 10 = 10 pts · K = 10 pts", ja: "5＝5点 · 10＝10点 · K＝10点" },
+  rulesFriendH: { zh: "朋友机制", en: "Finding friends", ja: "友の仕組み" },
+  rulesFriend: {
+    zh: "庄家叫一张牌；第一个打出它的人成为庄家方朋友（隐藏的队友）。",
+    en: "The dealer calls a card; the first player to play it becomes the dealer's hidden friend.",
+    ja: "親がカードを指名。最初にそれを出した人が親側の隠れた味方になります。",
+  },
+
   // stats
   statsTitle: { zh: "战绩", en: "Stats", ja: "成績" },
   noHands: { zh: "本局还没有完成的牌可统计。", en: "No completed hands yet.", ja: "まだ完了した局がありません。" },

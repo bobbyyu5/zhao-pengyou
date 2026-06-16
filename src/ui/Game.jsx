@@ -3,6 +3,7 @@ import Hud from "./Hud.jsx";
 import Table from "./Table.jsx";
 import Card from "./Card.jsx";
 import Stats from "./Stats.jsx";
+import Rules from "./Rules.jsx";
 import { SealReveal } from "./Seal.jsx";
 import { useLang, LangSwitch, seatName } from "../i18n/i18n.jsx";
 import { SUIT_SYMBOL, SUIT_IS_RED, rankLabel } from "../../engine/index.js";
@@ -14,6 +15,7 @@ export default function Game({ view, names, seal, toast, actions, onExit, videoT
   const { t } = useLang();
   const [sel, setSel] = useState(() => new Set());
   const [showStats, setShowStats] = useState(false);
+  const [showRules, setShowRules] = useState(false);
   useEffect(() => { setSel(new Set()); }, [view.phase, view.turn, view.handNumber]);
 
   const historyRef = useRef([]);
@@ -54,12 +56,14 @@ export default function Game({ view, names, seal, toast, actions, onExit, videoT
       {seal && <SealReveal seatName={seal.name || seatName(seal.seat, view.players, you, names, t)} onDone={actions.dismissSeal} />}
       {toast && <div className="toast">{toast}</div>}
       {showStats && <Stats history={historyRef.current} names={names} players={view.players} you={view.you} onClose={() => setShowStats(false)} />}
+      {showRules && <Rules config={view.config} onClose={() => setShowRules(false)} />}
 
       <div className="title-bar">
         <span className="brand">找朋友</span>
         <span style={{ display: "flex", gap: 6, alignItems: "center" }}>
           <LangSwitch />
           {videoControls}
+          <button className="tag" onClick={() => setShowRules(true)}>{t("rulesBtn")}</button>
           <button className="tag" onClick={() => setShowStats(true)}>{t("stats")}</button>
           <button className="tag" onClick={onExit}>
             {view.roundOver ? t("roundOverTag") : t("handTag", { n: view.handNumber, p: view.players })}

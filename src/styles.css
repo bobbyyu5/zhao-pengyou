@@ -82,8 +82,12 @@ button { font-family: var(--font-ui); cursor: pointer; border: none; }
 .hud .pts b { font-size: var(--fs-data); }
 .hud .pts .of { color: rgba(247,242,231,.45); font-size: 13px; }
 
+/* On the dark HUD chip, suits read light/cinnabar… */
 .suit-red { color: var(--cinnabar); }
 .suit-black { color: var(--ivory); }
+/* …but on an ivory CARD face, black suits must be dark ink (else they vanish — they did). */
+.card .suit-black { color: var(--ink); }
+.card .suit-red { color: var(--cinnabar); }
 
 /* ── Table / seats ──────────────────────────────────────────── */
 .table-wrap {

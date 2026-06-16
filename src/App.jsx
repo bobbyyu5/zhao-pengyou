@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from "react";
 import Game from "./ui/Game.jsx";
 import Settings from "./ui/Settings.jsx";
+import Rules from "./ui/Rules.jsx";
 import { Seal } from "./ui/Seal.jsx";
 import { VideoTile, SelfView, VideoControls } from "./ui/Video.jsx";
 import { ThemeProvider } from "./theme/theme.jsx";
@@ -24,6 +25,7 @@ export default function App() {
 
 function Root() {
   const [screen, setScreen] = useState("home"); // home | localSetup | localGame | online | settings
+  const [showRules, setShowRules] = useState(false);
   const local = useLocalGame();
   const online = useOnlineGame();
   const rtc = useWebRTC({ socket: online.socket, you: online.you, players: online.room?.players });
@@ -54,7 +56,8 @@ function Root() {
 
   return (
     <div className="app">
-      {screen === "home" && <Home onLocal={() => setScreen("localSetup")} onOnline={() => setScreen("online")} onSettings={() => setScreen("settings")} />}
+      {showRules && <Rules onClose={() => setShowRules(false)} />}
+      {screen === "home" && <Home onLocal={() => setScreen("localSetup")} onOnline={() => setScreen("online")} onSettings={() => setScreen("settings")} onRules={() => setShowRules(true)} />}
       {screen === "settings" && <Settings onBack={() => setScreen("home")} />}
       {screen === "localSetup" && (
         <LocalSetup onBack={() => setScreen("home")} onStart={(n) => { local.actions.start(n); setScreen("localGame"); }} />
@@ -66,7 +69,7 @@ function Root() {
   );
 }
 
-function Home({ onLocal, onOnline, onSettings }) {
+function Home({ onLocal, onOnline, onSettings, onRules }) {
   const { t } = useLang();
   return (
     <div className="splash">
@@ -79,7 +82,10 @@ function Home({ onLocal, onOnline, onSettings }) {
       <div className="stack" style={{ width: "100%", maxWidth: 320 }}>
         <button className="btn btn-primary" onClick={onLocal}>{t("vsBots")} <span className="en" style={{ color: "inherit", opacity: .7 }}>{t("vsBotsSub")}</span></button>
         <button className="btn btn-cinnabar" onClick={onOnline}>{t("playOnline")} <span className="en" style={{ color: "inherit", opacity: .85 }}>{t("playOnlineSub")}</span></button>
-        <button className="btn btn-ghost" onClick={onSettings}>{t("cardBacks")} <span className="en" style={{ color: "inherit", opacity: .7 }}>{t("cardBacksSub")}</span></button>
+        <div className="row">
+          <button className="btn btn-ghost btn-sm" style={{ width: "auto", flex: 1 }} onClick={onRules}>{t("rulesBtn")}</button>
+          <button className="btn btn-ghost btn-sm" style={{ width: "auto", flex: 1 }} onClick={onSettings}>{t("cardBacks")}</button>
+        </div>
       </div>
       <p className="muted center" style={{ fontSize: 11, maxWidth: 300 }}>{t("homeTagline1")}</p>
     </div>
