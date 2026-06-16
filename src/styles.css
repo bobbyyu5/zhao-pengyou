@@ -296,6 +296,9 @@ button { font-family: var(--font-ui); cursor: pointer; border: none; }
 .title-bar { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--sp-2); }
 .title-bar .brand { font-size: 22px; }
 .tag { font-size: 10px; background: var(--felt-rail); padding: 4px 8px; border-radius: var(--r-pill); color: var(--brass-light); font-family: var(--font-data); }
+.lang-switch { display: inline-flex; background: var(--felt-deep); border-radius: var(--r-pill); padding: 2px; gap: 2px; }
+.lang-switch button { font-size: 11px; padding: 4px 8px; border-radius: var(--r-pill); background: transparent; color: var(--jade); font-weight: 700; min-width: 26px; line-height: 1; }
+.lang-switch button.active { background: var(--brass); color: var(--felt-deep); }
 .log { background: rgba(4,20,12,.5); border-radius: var(--r-sm); padding: var(--sp-2); max-height: 92px; overflow-y: auto; font-size: 11px; line-height: 1.5; color: #CDEAD9; }
 .log .en { color: rgba(159,227,196,.6); font-size: 10px; }
 .banner { border-radius: var(--r-md); padding: var(--sp-3); font-weight: 600; }

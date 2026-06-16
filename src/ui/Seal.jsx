@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useLang } from "../i18n/i18n.jsx";
 
 /** The 友 cinnabar seal — app identity mark. */
 export function Seal({ className }) {
@@ -14,18 +15,19 @@ export function Seal({ className }) {
  * Skippable / reduced-motion respected (the overlay just fades fast). Auto-dismisses.
  */
 export function SealReveal({ seatName, onDone }) {
+  const { t } = useLang();
   const [show, setShow] = useState(true);
   useEffect(() => {
-    const t = setTimeout(() => { setShow(false); onDone?.(); }, 1600);
-    return () => clearTimeout(t);
+    const timer = setTimeout(() => { setShow(false); onDone?.(); }, 1600);
+    return () => clearTimeout(timer);
   }, [onDone]);
   if (!show) return null;
   return (
     <div className="seal-overlay" onClick={() => { setShow(false); onDone?.(); }} role="alert">
       <Seal />
       <div className="caption">
-        <div className="head" style={{ fontSize: 22 }}>找到朋友！</div>
-        <div className="en">{seatName} joins the dealer's side</div>
+        <div className="head" style={{ fontSize: 22 }}>{t("friendFound")}</div>
+        <div className="en">{t("joinsSide", { name: seatName })}</div>
       </div>
     </div>
   );

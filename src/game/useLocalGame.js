@@ -28,13 +28,10 @@ export function useLocalGame() {
   const schedule = (fn, ms) => { const t = setTimeout(fn, ms); timers.current.push(t); };
   const toast = (msg) => { ref.current.toast = msg; force(); schedule(() => { ref.current.toast = null; force(); }, 2200); };
 
-  function names(players) {
-    if (players === 4) return ["你", "下家", "对家", "上家"];
-    return Array.from({ length: players }, (_, i) => (i === 0 ? "你" : `玩家${i}`));
-  }
-
   function start(players, seed) {
-    ref.current.names = names(players);
+    // names stay null in local play → the UI renders translated seat labels (reactive to
+    // language switching). Online play passes real player names from the server instead.
+    ref.current.names = null;
     let s = newGame(players, seed);
     s = dealCardsOnly(s);
     s = applyBotBids(s);
@@ -117,7 +114,7 @@ export function useLocalGame() {
     if (next.friendSeats.length > prev.friendSeats.length) {
       const newSeat = next.friendSeats.find((x) => !prev.friendSeats.includes(x));
       if (newSeat != null && newSeat !== ref.current.you) {
-        ref.current.seal = { seat: newSeat, name: ref.current.names?.[newSeat] || `玩家${newSeat}` };
+        ref.current.seal = { seat: newSeat }; // name resolved/translated in the UI
       }
     }
   }

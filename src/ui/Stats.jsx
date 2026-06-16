@@ -1,4 +1,5 @@
 import React from "react";
+import { useLang, seatName } from "../i18n/i18n.jsx";
 import { rankLabel } from "../../engine/index.js";
 
 const SEAT_COLORS = ["#E8CE6B", "#4FA785", "#C8341F", "#9FE3C4", "#E89B3C", "#7FA8E8", "#C77FE8", "#E87FB0", "#7FE8C0", "#E8E07F"];
@@ -7,32 +8,33 @@ const SEAT_COLORS = ["#E8CE6B", "#4FA785", "#C8341F", "#9FE3C4", "#E89B3C", "#7F
  * Stats overlay: level progression per seat across hands, and grabber points per hand vs the
  * pass line. Pure inline SVG (no chart dependency) so it stays light on phones.
  */
-export default function Stats({ history, names, players, onClose }) {
+export default function Stats({ history, names, players, you = 0, onClose }) {
+  const { t } = useLang();
   return (
     <div className="seal-overlay" style={{ alignItems: "stretch", padding: 16 }} onClick={onClose}>
       <div className="app" style={{ justifyContent: "flex-start", maxWidth: 460 }} onClick={(e) => e.stopPropagation()}>
         <div className="title-bar">
-          <span className="brand" style={{ fontSize: 24 }}>战绩 Stats</span>
-          <button className="tag" onClick={onClose}>关闭</button>
+          <span className="brand" style={{ fontSize: 24 }}>{t("statsTitle")}</span>
+          <button className="tag" onClick={onClose}>{t("close")}</button>
         </div>
         {history.length === 0 ? (
-          <div className="panel center muted">本局还没有完成的牌可统计。<br /><span className="en">No completed hands yet.</span></div>
+          <div className="panel center muted">{t("noHands")}</div>
         ) : (
           <>
             <div className="panel">
-              <p className="head" style={{ margin: "0 0 8px" }}>等级进度 <span className="en">Level progression</span></p>
+              <p className="head" style={{ margin: "0 0 8px" }}>{t("levelProgress")}</p>
               <LevelChart history={history} players={players} names={names} />
               <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 8 }}>
                 {Array.from({ length: players }, (_, s) => (
                   <span key={s} style={{ fontSize: 11, display: "inline-flex", alignItems: "center", gap: 4 }}>
                     <i style={{ width: 10, height: 10, borderRadius: 2, background: SEAT_COLORS[s % SEAT_COLORS.length], display: "inline-block" }} />
-                    {names?.[s] || `玩家${s}`}
+                    {seatName(s, players, you, names, t)}
                   </span>
                 ))}
               </div>
             </div>
             <div className="panel">
-              <p className="head" style={{ margin: "0 0 8px" }}>每手抓分 <span className="en">Grabber points / hand</span></p>
+              <p className="head" style={{ margin: "0 0 8px" }}>{t("pointsPerHand")}</p>
               <PointsChart history={history} />
             </div>
           </>

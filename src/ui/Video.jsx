@@ -1,4 +1,5 @@
 import React, { useEffect, useRef } from "react";
+import { useLang } from "../i18n/i18n.jsx";
 
 /** A single live video element bound to a MediaStream (used as a seat avatar overlay). */
 export function VideoTile({ stream, muted, className }) {
@@ -28,15 +29,16 @@ export function SelfView({ stream, camOn }) {
 
 /** Start/stop camera + mic and mute toggles, shown in the title bar during an online game. */
 export function VideoControls({ rtc }) {
+  const { t } = useLang();
   if (!rtc) return null;
   if (!rtc.active) {
-    return <button className="tag" onClick={rtc.start} title="开启摄像头">📷 视频</button>;
+    return <button className="tag" onClick={rtc.start}>{t("videoTag")}</button>;
   }
   return (
     <>
-      <button className="tag" onClick={rtc.toggleMic} title="麦克风">{rtc.micOn ? "🎤" : "🔇"}</button>
-      <button className="tag" onClick={rtc.toggleCam} title="摄像头">{rtc.camOn ? "📹" : "🚫"}</button>
-      <button className="tag" onClick={rtc.stop} title="关闭视频" style={{ color: "var(--cinnabar)" }}>停</button>
+      <button className="tag" onClick={rtc.toggleMic}>{rtc.micOn ? "🎤" : "🔇"}</button>
+      <button className="tag" onClick={rtc.toggleCam}>{rtc.camOn ? "📹" : "🚫"}</button>
+      <button className="tag" onClick={rtc.stop} style={{ color: "var(--cinnabar)" }}>✕</button>
     </>
   );
 }

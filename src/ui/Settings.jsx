@@ -1,17 +1,19 @@
 import React from "react";
 import { useTheme } from "../theme/theme.jsx";
+import { useLang, LangSwitch } from "../i18n/i18n.jsx";
 
 /** Card-back gallery. Built-in designs plus any pushed via the remote manifest appear here. */
 export default function Settings({ onBack }) {
   const { cardBack, setCardBack, designs } = useTheme();
+  const { t } = useLang();
   return (
     <div className="stack" style={{ paddingTop: 24 }}>
       <div className="title-bar">
-        <span className="brand" style={{ fontSize: 26 }}>牌背设计</span>
-        <button className="tag" onClick={onBack}>返回</button>
+        <span className="brand" style={{ fontSize: 26 }}>{t("cardBacks")}</span>
+        <span style={{ display: "flex", gap: 6, alignItems: "center" }}><LangSwitch /><button className="tag" onClick={onBack}>{t("back")}</button></span>
       </div>
       <div className="panel">
-        <p className="head" style={{ marginTop: 0 }}>选择牌背 <span className="en">Card back</span></p>
+        <p className="head" style={{ marginTop: 0 }}>{t("chooseBack")}</p>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
           {designs.map((d) => (
             <button key={d.id} onClick={() => setCardBack(d.id)}
@@ -27,10 +29,7 @@ export default function Settings({ onBack }) {
           ))}
         </div>
         <hr className="hairline" />
-        <p className="muted" style={{ fontSize: 11, marginBottom: 0 }}>
-          新牌背会不定期更新（无需重新安装）。<br />
-          <span className="en">New designs arrive over time automatically — they're served from a manifest, no reinstall needed.</span>
-        </p>
+        <p className="muted" style={{ fontSize: 11, marginBottom: 0 }}>{t("backsUpdateNote")}</p>
       </div>
     </div>
   );

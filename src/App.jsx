@@ -4,6 +4,7 @@ import Settings from "./ui/Settings.jsx";
 import { Seal } from "./ui/Seal.jsx";
 import { VideoTile, SelfView, VideoControls } from "./ui/Video.jsx";
 import { ThemeProvider } from "./theme/theme.jsx";
+import { LanguageProvider, LangSwitch, useLang } from "./i18n/i18n.jsx";
 import { useLocalGame } from "./game/useLocalGame.js";
 import { useOnlineGame, SERVER_URL } from "./net/useOnlineGame.js";
 import { useWebRTC } from "./net/useWebRTC.js";
@@ -13,9 +14,11 @@ const COUNTS = Array.from({ length: MAX_PLAYERS - MIN_PLAYERS + 1 }, (_, i) => M
 
 export default function App() {
   return (
-    <ThemeProvider>
-      <Root />
-    </ThemeProvider>
+    <LanguageProvider>
+      <ThemeProvider>
+        <Root />
+      </ThemeProvider>
+    </LanguageProvider>
   );
 }
 
@@ -33,7 +36,6 @@ function Root() {
     return tiles;
   }, [rtc.remote, online?.view]);
 
-  // route online by its own phase
   if (screen === "online" && online.phase === "game" && online.view) {
     return (
       <>
@@ -65,65 +67,60 @@ function Root() {
 }
 
 function Home({ onLocal, onOnline, onSettings }) {
+  const { t } = useLang();
   return (
     <div className="splash">
+      <div style={{ position: "absolute", top: 16, right: 12 }}><LangSwitch /></div>
       <div>
         <div className="wordmark">找朋友</div>
-        <div className="sub">ZHAO PENGYOU · FIND FRIENDS</div>
+        <div className="sub">{t("subtitle")}</div>
       </div>
       <Seal />
       <div className="stack" style={{ width: "100%", maxWidth: 320 }}>
-        <button className="btn btn-primary" onClick={onLocal}>单机对战 <span className="en" style={{ color: "inherit", opacity: .7 }}>vs bots</span></button>
-        <button className="btn btn-cinnabar" onClick={onOnline}>多人联机 <span className="en" style={{ color: "inherit", opacity: .85 }}>play online</span></button>
-        <button className="btn btn-ghost" onClick={onSettings}>牌背设计 <span className="en" style={{ color: "inherit", opacity: .7 }}>card backs</span></button>
+        <button className="btn btn-primary" onClick={onLocal}>{t("vsBots")} <span className="en" style={{ color: "inherit", opacity: .7 }}>{t("vsBotsSub")}</span></button>
+        <button className="btn btn-cinnabar" onClick={onOnline}>{t("playOnline")} <span className="en" style={{ color: "inherit", opacity: .85 }}>{t("playOnlineSub")}</span></button>
+        <button className="btn btn-ghost" onClick={onSettings}>{t("cardBacks")} <span className="en" style={{ color: "inherit", opacity: .7 }}>{t("cardBacksSub")}</span></button>
       </div>
-      <p className="muted center" style={{ fontSize: 11, maxWidth: 300 }}>
-        把链接发给亲友，加到主屏幕即可当 App 用。<br />
-        <span className="en">Share the link · add to home screen · plays like an app.</span>
-      </p>
+      <p className="muted center" style={{ fontSize: 11, maxWidth: 300 }}>{t("homeTagline1")}</p>
     </div>
   );
 }
 
 function LocalSetup({ onBack, onStart }) {
+  const { t } = useLang();
   const [n, setN] = useState(4);
   const cfg = CONFIG[n];
   return (
     <div className="stack" style={{ paddingTop: 24 }}>
       <div className="title-bar">
         <span className="brand" style={{ fontSize: 26 }}>找朋友</span>
-        <button className="tag" onClick={onBack}>返回</button>
+        <span style={{ display: "flex", gap: 6, alignItems: "center" }}><LangSwitch /><button className="tag" onClick={onBack}>{t("back")}</button></span>
       </div>
       <div className="panel">
         <div className="field" style={{ marginBottom: 12 }}>
-          <label>人数 Players</label>
+          <label>{t("players")}</label>
           <div className="seg">
             {COUNTS.map((c) => (
               <button key={c} className={n === c ? "active" : ""} onClick={() => setN(c)}>
                 {c}
-                {!CONFIG[c].confirmed && <span className="unconf">未校准</span>}
+                {!CONFIG[c].confirmed && <span className="unconf">{t("uncalibrated")}</span>}
               </button>
             ))}
           </div>
         </div>
         <ConfigSummary cfg={cfg} />
-        <button className="btn btn-primary" style={{ marginTop: 12 }} onClick={() => onStart(n)}>
-          发牌开始 Deal
-        </button>
-        {!cfg.confirmed && (
-          <p className="cinnabar-text center" style={{ fontSize: 11, marginBottom: 0 }}>
-            ⚠ 8–10 人规则为推算值，待家庭实战校准。
-          </p>
-        )}
+        <button className="btn btn-primary" style={{ marginTop: 12 }} onClick={() => onStart(n)}>{t("deal")}</button>
+        {!cfg.confirmed && <p className="cinnabar-text center" style={{ fontSize: 11, marginBottom: 0 }}>{t("unconfirmedWarn")}</p>}
       </div>
     </div>
   );
 }
 
 function ConfigSummary({ cfg }) {
+  const { t } = useLang();
   const items = [
-    ["牌副 Decks", cfg.decks], ["每人 Hand", cfg.perPlayer], ["底牌 Kitty", cfg.kitty],
-    ["朋友 Friends", cfg.friends], ["总分 Points", cfg.totalPoints], ["过庄线 Pass", cfg.passLine],
+    [t("cfgDecks"), cfg.decks], [t("cfgHand"), cfg.perPlayer], [t("cfgKitty"), cfg.kitty],
+    [t("cfgFriends"), cfg.friends], [t("cfgPoints"), cfg.totalPoints], [t("cfgPass"), cfg.passLine],
   ];
   return (
     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
@@ -138,6 +135,7 @@ function ConfigSummary({ cfg }) {
 }
 
 function Online({ online, rtc, onBack }) {
+  const { t } = useLang();
   const [name, setName] = useState("");
   const [code, setCode] = useState("");
   const [players, setPlayers] = useState(4);
@@ -145,11 +143,11 @@ function Online({ online, rtc, onBack }) {
   if (!SERVER_URL) {
     return (
       <div className="stack" style={{ paddingTop: 24 }}>
-        <div className="title-bar"><span className="brand" style={{ fontSize: 26 }}>多人联机</span><button className="tag" onClick={onBack}>返回</button></div>
+        <div className="title-bar"><span className="brand" style={{ fontSize: 26 }}>{t("online")}</span><span style={{ display: "flex", gap: 6 }}><LangSwitch /><button className="tag" onClick={onBack}>{t("back")}</button></span></div>
         <div className="panel">
-          <p className="head">联机服务器未配置</p>
-          <p className="en">No server configured. Set <code>VITE_SERVER_URL</code> at build time to your deployed Railway server, then this screen connects automatically.</p>
-          <p className="muted" style={{ fontSize: 12 }}>单机对战已可完整体验全部规则。</p>
+          <p className="head">{t("serverMissingTitle")}</p>
+          <p className="en">{t("serverMissingBody")}</p>
+          <p className="muted" style={{ fontSize: 12 }}>{t("serverMissingNote")}</p>
         </div>
       </div>
     );
@@ -161,72 +159,69 @@ function Online({ online, rtc, onBack }) {
 
   return (
     <div className="stack" style={{ paddingTop: 24 }}>
-      <div className="title-bar"><span className="brand" style={{ fontSize: 26 }}>多人联机</span><button className="tag" onClick={onBack}>返回</button></div>
-      {online.error && <div className="panel cinnabar-text">{online.error}</div>}
+      <div className="title-bar"><span className="brand" style={{ fontSize: 26 }}>{t("online")}</span><span style={{ display: "flex", gap: 6 }}><LangSwitch /><button className="tag" onClick={onBack}>{t("back")}</button></span></div>
+      {online.error && <div className="panel cinnabar-text">{t("cantConnectServer")}</div>}
       <div className="panel">
         <div className="field" style={{ marginBottom: 12 }}>
-          <label>昵称 Display name</label>
-          <input className="input" value={name} onChange={(e) => setName(e.target.value)} placeholder="你的名字" maxLength={8} />
+          <label>{t("displayName")}</label>
+          <input className="input" value={name} onChange={(e) => setName(e.target.value)} placeholder={t("yourName")} maxLength={8} />
         </div>
         <div className="field" style={{ marginBottom: 12 }}>
-          <label>人数 Players (创建房间)</label>
+          <label>{t("createForN")}</label>
           <div className="seg">
             {COUNTS.map((c) => <button key={c} className={players === c ? "active" : ""} onClick={() => setPlayers(c)}>{c}</button>)}
           </div>
         </div>
-        <button className="btn btn-primary" disabled={!name.trim()} onClick={() => online.actions.createRoom(name.trim(), players)}>
-          创建房间 Create room
-        </button>
+        <button className="btn btn-primary" disabled={!name.trim()} onClick={() => online.actions.createRoom(name.trim(), players)}>{t("createRoom")}</button>
       </div>
       <div className="panel">
         <div className="field" style={{ marginBottom: 12 }}>
-          <label>房间号 Room code</label>
+          <label>{t("roomCode")}</label>
           <input className="input code" value={code} onChange={(e) => setCode(e.target.value)} placeholder="ABCD" maxLength={6} />
         </div>
-        <button className="btn btn-cinnabar" disabled={!name.trim() || code.length < 4} onClick={() => online.actions.joinRoom(name.trim(), code)}>
-          加入房间 Join room
-        </button>
+        <button className="btn btn-cinnabar" disabled={!name.trim() || code.length < 4} onClick={() => online.actions.joinRoom(name.trim(), code)}>{t("joinRoom")}</button>
       </div>
     </div>
   );
 }
 
 function Lobby({ online, rtc, onBack }) {
+  const { t } = useLang();
   const room = online.room;
   const isHost = online.you === room.host;
   const filled = room.seats.filter(Boolean).length;
   return (
     <div className="stack" style={{ paddingTop: 24 }}>
-      <div className="title-bar"><span className="brand" style={{ fontSize: 26 }}>等待大厅</span><button className="tag" onClick={onBack}>离开</button></div>
+      <div className="title-bar"><span className="brand" style={{ fontSize: 26 }}>{t("lobby")}</span><span style={{ display: "flex", gap: 6 }}><LangSwitch /><button className="tag" onClick={onBack}>{t("leave")}</button></span></div>
       <div className="panel center">
-        <div className="muted" style={{ fontSize: 12 }}>房间号 ROOM CODE</div>
+        <div className="muted" style={{ fontSize: 12 }}>{t("roomCode")}</div>
         <div className="data" style={{ fontSize: 40, letterSpacing: 8, color: "var(--brass-light)" }}>{room.code}</div>
-        <div className="muted" style={{ fontSize: 12 }}>把房间号发给亲友 · share this code</div>
+        <div className="muted" style={{ fontSize: 12 }}>{t("shareCode")}</div>
       </div>
       <div className="panel">
-        <div className="muted" style={{ fontSize: 12, marginBottom: 8 }}>座位 Seats ({filled}/{room.players})</div>
+        <div className="muted" style={{ fontSize: 12, marginBottom: 8 }}>{t("seats")} ({filled}/{room.players})</div>
         <div className="players-pill">
           {room.seats.map((s, i) => (
             <span key={i} className={`pp ${s ? "ready" : ""}`}>
-              {i + 1}. {s ? (s.bot ? `${s.name}🤖` : s.name) : "空位…"}{i === room.host ? " 👑" : ""}
+              {i + 1}. {s ? (s.bot ? `${s.name}🤖` : s.name) : t("emptySeat")}{i === room.host ? " 👑" : ""}
             </span>
           ))}
         </div>
         {isHost && (
           <div className="row" style={{ marginTop: 12 }}>
-            <button className="btn btn-ghost btn-sm" onClick={online.actions.addBots}>补满机器人</button>
-            <button className="btn btn-primary btn-sm" disabled={filled < 2} onClick={online.actions.startGame}>开始游戏</button>
+            <button className="btn btn-ghost btn-sm" onClick={online.actions.addBots}>{t("fillBots")}</button>
+            <button className="btn btn-primary btn-sm" disabled={filled < 2} onClick={online.actions.startGame}>{t("startGame")}</button>
           </div>
         )}
-        {!isHost && <p className="muted center" style={{ fontSize: 12, marginTop: 10 }}>等待房主开始…</p>}
+        {!isHost && <p className="muted center" style={{ fontSize: 12, marginTop: 10 }}>{t("waitHost")}</p>}
       </div>
       <div className="panel center">
-        <p className="muted" style={{ fontSize: 12, marginTop: 0 }}>开摄像头边玩边聊 · see &amp; hear each other</p>
-        {rtc && !rtc.active && <button className="btn btn-ghost btn-sm" onClick={rtc.start}>📷 开启视频 Start camera</button>}
+        <p className="muted" style={{ fontSize: 12, marginTop: 0 }}>{t("videoPrompt")}</p>
+        {rtc && !rtc.active && <button className="btn btn-ghost btn-sm" onClick={rtc.start}>{t("startCamera")}</button>}
         {rtc && rtc.active && (
           <div className="row" style={{ justifyContent: "center" }}>
-            <button className="btn btn-ghost btn-sm" onClick={rtc.toggleMic}>{rtc.micOn ? "🎤 静音" : "🔇 取消静音"}</button>
-            <button className="btn btn-ghost btn-sm" onClick={rtc.toggleCam}>{rtc.camOn ? "📹 关摄像头" : "🚫 开摄像头"}</button>
+            <button className="btn btn-ghost btn-sm" onClick={rtc.toggleMic}>{rtc.micOn ? t("muteOn") : t("muteOff")}</button>
+            <button className="btn btn-ghost btn-sm" onClick={rtc.toggleCam}>{rtc.camOn ? t("camOff") : t("camOn")}</button>
           </div>
         )}
         {rtc?.error && <p className="cinnabar-text" style={{ fontSize: 11 }}>{rtc.error}</p>}
