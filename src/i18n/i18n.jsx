@@ -94,6 +94,8 @@ const DICT = {
   bidNoTrump: { zh: "无主 (王 ×{n})", en: "No-trump (jokers ×{n})", ja: "切札なし (ジョーカー×{n})" },
   pass: { zh: "不叫", en: "Pass", ja: "パス" },
   passNoRank: { zh: "无本级牌 · 过", en: "no rank cards · pass", ja: "該当札なし · パス" },
+  bidCantBeat: { zh: "你的牌无法超过当前最高叫牌，请过牌。", en: "Your cards can't beat the high bid — tap Pass.", ja: "今のコールを超えられません。パスしてください。" },
+  bidHowto: { zh: "亮更多张本级牌（或王）才能压过别人；压不过就过牌。", en: "Expose more rank cards (or jokers) to outbid; if you can't, pass.", ja: "より多くの級札（またはジョーカー）で上回ります。無理ならパス。" },
 
   // bury
   buryTitle: { zh: "埋牌 · 扣 {n} 张", en: "Bury {n} cards", ja: "底札 · {n}枚伏せる" },
@@ -192,9 +194,11 @@ const DICT = {
   levelProgress: { zh: "等级进度", en: "Level progression", ja: "レベル推移" },
   pointsPerHand: { zh: "每手抓分", en: "Grabber points / hand", ja: "局ごとの得点" },
 
-  // seal
+  // seal / friend
   friendFound: { zh: "找到朋友！", en: "Friend found!", ja: "友が見つかった！" },
   joinsSide: { zh: "{name} 加入庄家方", en: "{name} joins the dealer's side", ja: "{name} が親側に加わりました" },
+  youAreFriend: { zh: "你是朋友（庄家方）", en: "You're the friend (dealer's side)", ja: "あなたは友（親側）です" },
+  youAreDealer: { zh: "你是庄家", en: "You're the dealer", ja: "あなたは親です" },
 
   // video controls (titles)
   videoTag: { zh: "📷 视频", en: "📷 Video", ja: "📷 映像" },

@@ -6,26 +6,29 @@ import { legalMoves, dealerSideSeats } from "./engine.js";
 import { isTrump, sortHand, pointValue } from "./cards.js";
 import { sumPoints, detectFormation } from "./formations.js";
 
-/** Choose a bid during the draw from a seat's own hand. Returns a bid or null (pass). */
+/**
+ * Choose a bid during the draw from a seat's own hand. Returns a bid or null (pass).
+ *
+ * Deliberately CONSERVATIVE so a human player usually gets to declare trump: bots only bid a
+ * suit when they hold 2+ of the level rank (a real holding), and only bid no-trump with a
+ * strong joker count (3+). A human with a single rank card can then claim trump unopposed.
+ */
 export function botBid(state, seat) {
   const hand = state.hands[seat];
   const level = state.level;
   const jokers = hand.filter((c) => c.suit === "JOKER").length;
 
-  // Count level-rank cards per suit; bid the suit with the most copies.
   const counts = { S: 0, H: 0, C: 0, D: 0 };
   for (const c of hand) if (c.suit !== "JOKER" && c.rank === level) counts[c.suit]++;
   let bestSuit = null, bestCount = 0;
   for (const s of Object.keys(counts)) if (counts[s] > bestCount) { bestSuit = s; bestCount = counts[s]; }
 
   const cur = state.bid;
-  // Prefer a suited bid; only no-trump if it strictly beats current and we have the jokers.
-  if (bestCount >= 1) {
-    if (!cur || bestCount > cur.count) return { suit: bestSuit, count: bestCount };
-  }
-  if (jokers >= 1 && (!cur || (jokers === cur.count && !cur.noTrump) || jokers > cur.count)) {
-    // bots are conservative about no-trump; only at equal-or-better and at least a pair
-    if (jokers >= 2 && (!cur || jokers >= cur.count)) return { noTrump: true, count: jokers };
+  // Suited bid only with a genuine holding (2+), and only if it beats the standing bid.
+  if (bestCount >= 2 && (!cur || bestCount > cur.count)) return { suit: bestSuit, count: bestCount };
+  // No-trump only with a strong joker holding (3+).
+  if (jokers >= 3 && (!cur || jokers > cur.count || (jokers === cur.count && !cur.noTrump))) {
+    return { noTrump: true, count: jokers };
   }
   return null;
 }

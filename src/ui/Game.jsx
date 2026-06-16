@@ -89,7 +89,11 @@ export default function Game({ view, names, seal, toast, actions, onExit, videoT
       {view.yourHand.length > 0 && (
         <div className="hand-wrap">
           <div className="hand-meta">
-            <span className="muted" style={{ fontSize: 12 }}>{t("yourHand")} ({view.yourHand.length})</span>
+            <span style={{ display: "flex", gap: 8, alignItems: "center" }}>
+              <span className="muted" style={{ fontSize: 12 }}>{t("yourHand")} ({view.yourHand.length})</span>
+              {isDealer && <span className="you-friend" style={{ background: "var(--brass)", color: "var(--felt-deep)" }}>{t("youAreDealer")}</span>}
+              {!isDealer && view.friendSeats.includes(you) && <span className="you-friend">{t("youAreFriend")}</span>}
+            </span>
             {view.friendCards?.length > 0 && view.phase === "play" && (
               <span className="muted" style={{ fontSize: 11 }}>
                 {t("friendCardsLabel")}{view.friendCards.map((f) => `${SUIT_SYMBOL[f.suit] || ""}${rankLabel(f.rank)}`).join(" ")}
@@ -144,11 +148,13 @@ function BidPanel({ view, onBid }) {
   };
   const anything = Object.values(counts).some((n) => n > 0) || jokers > 0;
   const curLabel = cur ? (cur.noTrump ? t("noTrump") + `×${cur.count}` : `${suitName(cur.suit)}×${cur.count}`) : t("bidNobody");
+  const canBeatAny = SUITS.some((s) => counts[s] >= 1 && canBeat(counts[s], false)) || (jokers >= 1 && canBeat(jokers, true));
 
   return (
     <div className="panel">
       <p className="head" style={{ margin: "0 0 4px" }}>{t("bidTitle", { r: rankLabel(level) })}</p>
       <p className="en" style={{ marginTop: 0 }}>{t("bidBody", { r: rankLabel(level) })} {t("bidCurrent", { bid: curLabel })}</p>
+      {cur && !canBeatAny && <p className="cinnabar-text" style={{ fontSize: 12, marginTop: -2 }}>{t("bidCantBeat")}</p>}
       <div className="seg" style={{ marginBottom: 8 }}>
         {SUITS.map((s) => (
           <button key={s} disabled={counts[s] < 1 || !canBeat(counts[s], false)} onClick={() => onBid({ suit: s, count: counts[s] })}>

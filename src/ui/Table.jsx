@@ -50,7 +50,7 @@ export default function Table({ view, names, videoTiles }) {
                 {isDealer && <span className="badge-dealer">{t("dealerBadge")}</span>}
                 {isFriend && <div className="badge-friend"><Seal /></div>}
               </div>
-              <div className="name">{seatName(s, players, you, names, t)}</div>
+              <div className="name">{seatName(s, players, you, names, t)}{isFriend ? <span className="friend-label"> · {t("roleFriend")}</span> : ""}</div>
               <div className="lvl">打{rankLabel(levelsBySeat[s])}{count > 0 ? ` · ${count}` : ""}</div>
               <div className="backs">{Array.from({ length: backs }, (_, i) => <span key={i} className={`back ${backCls}`} />)}</div>
             </div>

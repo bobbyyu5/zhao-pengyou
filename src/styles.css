@@ -290,7 +290,10 @@ button { font-family: var(--font-ui); cursor: pointer; border: none; }
   border: 1px solid var(--paper-line);
 }
 .seg button.active { background: var(--brass); color: var(--felt-deep); border-color: var(--brass); }
+.seg button:disabled { opacity: .3; cursor: not-allowed; filter: grayscale(.5); }
 .seg button .unconf { display: block; font-size: 8px; color: var(--cinnabar); font-family: var(--font-ui); }
+.seat .friend-label { font-size: 10px; color: var(--cinnabar); font-weight: 700; }
+.you-friend { display: inline-flex; align-items: center; gap: 4px; background: var(--cinnabar); color: var(--ivory); padding: 3px 10px; border-radius: var(--r-pill); font-size: 11px; font-weight: 700; }
 
 /* ── Misc layout ────────────────────────────────────────────── */
 .row { display: flex; gap: var(--sp-2); }
