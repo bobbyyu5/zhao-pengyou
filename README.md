@@ -102,6 +102,10 @@ reason — playtest, then adjust there.
 
 - The WebRTC mesh suits a family table (~4–7). Past ~8 peers a mesh gets heavy; an SFU would be
   the upgrade. Camera/mic needs HTTPS + permission (works on the deployed site).
+- **Video across different networks:** STUN (free, built in) connects most home-wifi players
+  directly. Players on cellular/strict networks may need a **TURN relay** — set
+  `VITE_TURN_URLS` / `VITE_TURN_USERNAME` / `VITE_TURN_CREDENTIAL` (e.g. metered.ca's free Open
+  Relay) and the app uses it automatically; otherwise it falls back to STUN.
 - Bots are legal-but-simple — fine for rules-checking and a solo game, not a tough opponent.
 - The live draw is modelled faithfully in the engine; the single-device UI uses a post-deal
   bid window (same outcome) for reliability. Online uses a timed bid window.

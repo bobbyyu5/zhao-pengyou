@@ -9,7 +9,22 @@ import { useEffect, useRef, useState } from "react";
  * Media never touches the server (only SDP/ICE signaling is relayed), so it stays private.
  * Needs HTTPS + camera/mic permission — works on the deployed site, not always on localhost.
  */
-const ICE = [{ urls: "stun:stun.l.google.com:19302" }, { urls: "stun:global.stun.twilio.com:3478" }];
+// STUN is always on (free, lets most home-network peers connect directly). TURN is a relay
+// for players behind strict/cellular networks where direct connection fails — add keys via
+// env (e.g. metered.ca Open Relay free tier or Twilio) and they're used automatically.
+const ENV = import.meta.env || {};
+function buildIce() {
+  const ice = [
+    { urls: "stun:stun.l.google.com:19302" },
+    { urls: "stun:global.stun.twilio.com:3478" },
+  ];
+  const turnUrls = (ENV.VITE_TURN_URLS || "").split(",").map((s) => s.trim()).filter(Boolean);
+  if (turnUrls.length && ENV.VITE_TURN_USERNAME && ENV.VITE_TURN_CREDENTIAL) {
+    ice.push({ urls: turnUrls, username: ENV.VITE_TURN_USERNAME, credential: ENV.VITE_TURN_CREDENTIAL });
+  }
+  return ice;
+}
+const ICE = buildIce();
 
 export function useWebRTC({ socket, you, players }) {
   const [localStream, setLocalStream] = useState(null);
