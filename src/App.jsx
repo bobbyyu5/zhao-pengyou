@@ -7,6 +7,7 @@ import { VideoTile, SelfView, VideoControls, VideoHint } from "./ui/Video.jsx";
 import AdBanner from "./ui/AdBanner.jsx";
 import { ThemeProvider } from "./theme/theme.jsx";
 import { LanguageProvider, LangSwitch, useLang } from "./i18n/i18n.jsx";
+import SoundToggle from "./ui/SoundToggle.jsx";
 import { useLocalGame } from "./game/useLocalGame.js";
 import { useOnlineGame, SERVER_URL } from "./net/useOnlineGame.js";
 import { useWebRTC } from "./net/useWebRTC.js";
@@ -100,7 +101,7 @@ function Home({ onLocal, onOnline, onSettings, onRules }) {
   const { t } = useLang();
   return (
     <div className="splash">
-      <div style={{ position: "absolute", top: 16, right: 12 }}><LangSwitch /></div>
+      <div style={{ position: "absolute", top: 16, right: 12, display: "flex", gap: 6, alignItems: "center" }}><SoundToggle /><LangSwitch /></div>
       <div>
         <div className="wordmark">找朋友</div>
         <div className="sub">{t("subtitle")}</div>

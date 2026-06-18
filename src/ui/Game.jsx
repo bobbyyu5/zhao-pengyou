@@ -4,8 +4,11 @@ import Table from "./Table.jsx";
 import Card from "./Card.jsx";
 import Stats from "./Stats.jsx";
 import Rules from "./Rules.jsx";
+import Confetti from "./Confetti.jsx";
+import SoundToggle from "./SoundToggle.jsx";
 import { SealReveal } from "./Seal.jsx";
 import { useLang, LangSwitch, seatName } from "../i18n/i18n.jsx";
+import { sound } from "../sound/sound.js";
 import { SUIT_SYMBOL, SUIT_IS_RED, rankLabel } from "../../engine/index.js";
 
 const SUITS = ["S", "H", "C", "D"];
@@ -48,9 +51,17 @@ export default function Game({ view, names, seal, toast, actions, onExit, videoT
 
   function haptic(ms) { try { navigator.vibrate?.(ms); } catch {} }
   function toggle(id) {
-    haptic(8);
+    haptic(8); sound.tap();
     setSel((prev) => { const next = new Set(prev); next.has(id) ? next.delete(id) : next.add(id); return next; });
   }
+
+  // trick-win sound when a trick resolves; reveal sound when a friend is stamped
+  const prevTricks = useRef(0);
+  useEffect(() => {
+    if (view.tricksPlayed > prevTricks.current) { sound.trick(); prevTricks.current = view.tricksPlayed; }
+    if (view.tricksPlayed < prevTricks.current) prevTricks.current = view.tricksPlayed; // new hand
+  }, [view.tricksPlayed]);
+  useEffect(() => { if (seal) sound.reveal(); }, [seal]);
 
   const selectedCards = view.yourHand.filter((c) => sel.has(c.id));
 
@@ -77,6 +88,7 @@ export default function Game({ view, names, seal, toast, actions, onExit, videoT
         <span className="brand">找朋友</span>
         <span style={{ display: "flex", gap: 6, alignItems: "center" }}>
           <LangSwitch />
+          <SoundToggle />
           {videoControls}
           <button className="tag" onClick={() => setShowRules(true)}>{t("rulesBtn")}</button>
           <button className="tag" onClick={() => setShowStats(true)}>{t("stats")}</button>
@@ -131,7 +143,7 @@ export default function Game({ view, names, seal, toast, actions, onExit, videoT
           </div>
           {myTurn && (
             <button className="btn btn-primary" disabled={selectedCards.length === 0}
-              onClick={() => { haptic(14); actions.humanPlay(selectedCards); setSel(new Set()); }}>
+              onClick={() => { haptic(14); sound.play(); actions.humanPlay(selectedCards); setSel(new Set()); }}>
               {t("play")} ({selectedCards.length})
             </button>
           )}
@@ -242,21 +254,47 @@ function CallPanel({ view, onCall }) {
   );
 }
 
+function CountUp({ to, dur = 850 }) {
+  const [n, setN] = useState(0);
+  useEffect(() => {
+    let raf; const start = performance.now();
+    const ease = (p) => 1 - Math.pow(1 - p, 3);
+    const tick = (now) => { const p = Math.min(1, (now - start) / dur); setN(Math.round(to * ease(p))); if (p < 1) raf = requestAnimationFrame(tick); };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [to]);
+  return <span className="countup">{n}</span>;
+}
+
 function ScorePanel({ view, names, onNext }) {
   const { t } = useLang();
   const r = view.result;
-  const win = r.dealerWon;
+  const dealerWon = r.dealerWon;
+  // did MY side win? dealer side = dealer + friends
+  const myDealerSide = view.you === r.dealerSeat || r.friendSeats.includes(view.you);
+  const iWon = myDealerSide ? dealerWon : !dealerWon;
+
+  useEffect(() => {
+    if (iWon) sound.win(); else sound.lose();
+    // level-up fanfare if my own seat climbed
+    const mine = r.changes.find((c) => c.seat === view.you);
+    if (mine && iWon) setTimeout(() => sound.levelUp(), 450);
+  }, []);
+
   return (
-    <div className={`banner ${win ? "win" : "lose"}`}>
+    <div className={`banner ${iWon ? "win" : "lose"}`}>
+      {iWon && <Confetti />}
       <div className="head" style={{ fontSize: 18 }}>{r.gouDaoDi ? t("gouDaoDi") : t(`tier_${r.tier}`)}</div>
       <div className="en" style={{ color: "rgba(255,255,255,.85)" }}>
-        {t("scoreGrab", { g: r.grabberPoints, line: r.passLine })}
+        {t("grabbers")} <CountUp to={r.grabberPoints} /> / {r.passLine}
         {r.kittyAwarded ? t("kittyBonus", { k: r.kittyAwarded }) : ""}
       </div>
-      <div style={{ fontSize: 12, margin: "8px 0", lineHeight: 1.6 }}>
+      <div style={{ fontSize: 12, margin: "8px 0", lineHeight: 1.7 }}>
         {r.changes.map((c, i) => (
-          <div key={i}>
-            {seatName(c.seat, view.players, view.you, names, t)} · {c.role === "dealer" ? t("roleDealer") : t("roleFriend")} {t("toLevel", { lvl: rankLabel(c.to) })}
+          <div key={i} className={`score-row ${c.seat === view.you ? "me" : ""}`} style={{ animationDelay: `${i * 90}ms` }}>
+            {c.seat === view.you && <span className="seal-mini">友</span>}
+            {seatName(c.seat, view.players, view.you, names, t)} · {c.role === "dealer" ? t("roleDealer") : t("roleFriend")}{" "}
+            <span className="lvl-to" style={{ animationDelay: `${i * 90 + 150}ms` }}>{t("toLevel", { lvl: rankLabel(c.to) })}</span>
             {c.note ? ` (${c.note})` : ""}
           </div>
         ))}

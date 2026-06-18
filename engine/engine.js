@@ -729,6 +729,7 @@ export function viewFor(s, seat) {
     passLine: s.config.passLine,
     handCounts: s.hands.map((h) => h.length),
     levelsBySeat: s.levelsBySeat.slice(),
+    tricksPlayed: s.tricksPlayed,
     config: s.config,
     players: s.players,
     bid: s.bid,

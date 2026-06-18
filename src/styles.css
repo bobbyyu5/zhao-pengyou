@@ -407,6 +407,30 @@ button.card:active { transform: scale(.93); }
 }
 @keyframes sweep { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
 
+/* Confetti burst (win celebration) */
+.confetti { position: fixed; inset: 0; z-index: 55; pointer-events: none; overflow: hidden; }
+.confetti span {
+  position: absolute; top: -8%; border-radius: 2px; opacity: .96;
+  animation-name: fall; animation-timing-function: cubic-bezier(.3,.6,.5,1); animation-fill-mode: forwards;
+}
+@keyframes fall {
+  0% { transform: translateY(-10vh) rotate(var(--r,0deg)); opacity: 1; }
+  100% { transform: translateY(112vh) rotate(calc(var(--r,0deg) + 720deg)); opacity: .65; }
+}
+
+/* Score screen — level-change rows stamp in, the player's own row gets a seal */
+.score-row { animation: stampRow .4s cubic-bezier(.2,.9,.3,1.3) backwards; }
+.score-row.me { font-weight: 700; }
+.score-row .seal-mini {
+  display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px;
+  background: var(--cinnabar); color: var(--ivory); border-radius: 4px; font-family: var(--font-brand);
+  font-size: 12px; margin-right: 6px; vertical-align: middle;
+}
+.score-row .lvl-to { display: inline-block; animation: popLvl .5s cubic-bezier(.2,.9,.3,1.4) .2s backwards; color: var(--brass-light); font-weight: 800; }
+@keyframes stampRow { 0% { opacity: 0; transform: translateY(8px) scale(.96); } 100% { opacity: 1; transform: none; } }
+@keyframes popLvl { 0% { transform: scale(2.2); opacity: 0; } 60% { transform: scale(.9); opacity: 1; } 100% { transform: scale(1); } }
+.banner .countup { font-family: var(--font-data); font-weight: 800; }
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; transition-duration: .001ms !important; }
 }
