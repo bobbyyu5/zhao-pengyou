@@ -23,9 +23,19 @@ export default function App() {
   );
 }
 
+// invite link: ?room=CODE lands straight on the join screen with the code prefilled
+const INVITE_ROOM = (() => {
+  try { return new URLSearchParams(window.location.search).get("room"); } catch { return null; }
+})();
+const IS_WECHAT = (() => {
+  try { return /micromessenger/i.test(navigator.userAgent); } catch { return false; }
+})();
+
 function Root() {
-  const [screen, setScreen] = useState("home"); // home | localSetup | localGame | online | settings
+  const [screen, setScreen] = useState(INVITE_ROOM ? "online" : "home");
   const [showRules, setShowRules] = useState(false);
+  const [wechatDismissed, setWechatDismissed] = useState(false);
+  const { t } = useLang();
   const local = useLocalGame();
   const online = useOnlineGame();
   const rtc = useWebRTC({ socket: online.socket, you: online.you, players: online.room?.players });
@@ -38,9 +48,21 @@ function Root() {
     return tiles;
   }, [rtc.remote, online?.view]);
 
+  const wechatBanner = IS_WECHAT && !wechatDismissed ? (
+    <div style={{
+      position: "fixed", top: 0, left: 0, right: 0, zIndex: 70, background: "var(--cinnabar-deep)",
+      color: "var(--ivory)", fontSize: 12, padding: "10px 12px", display: "flex", gap: 10, alignItems: "center",
+      boxShadow: "var(--shadow-lift)",
+    }}>
+      <span style={{ flex: 1, lineHeight: 1.4 }}>{t("wechatBanner")}</span>
+      <button className="tag" onClick={() => setWechatDismissed(true)}>{t("gotIt")}</button>
+    </div>
+  ) : null;
+
   if (screen === "online" && online.phase === "game" && online.view) {
     return (
       <>
+        {wechatBanner}
         <Game {...online}
           videoTiles={videoTiles}
           videoControls={<VideoControls rtc={rtc} />}
@@ -52,11 +74,12 @@ function Root() {
     );
   }
   if (screen === "localGame" && local.view) {
-    return <Game {...local} onExit={() => setScreen("home")} />;
+    return <>{wechatBanner}<Game {...local} onExit={() => setScreen("home")} /></>;
   }
 
   return (
     <div className="app">
+      {wechatBanner}
       {showRules && <Rules onClose={() => setShowRules(false)} />}
       {screen === "home" && <Home onLocal={() => setScreen("localSetup")} onOnline={() => setScreen("online")} onSettings={() => setScreen("settings")} onRules={() => setShowRules(true)} />}
       {screen === "settings" && <Settings onBack={() => setScreen("home")} />}
@@ -64,7 +87,7 @@ function Root() {
         <LocalSetup onBack={() => setScreen("home")} onStart={(n) => { local.actions.start(n); setScreen("localGame"); }} />
       )}
       {screen === "online" && (
-        <Online online={online} rtc={rtc} onBack={() => { rtc.stop(); online.actions.leave(); setScreen("home"); }} />
+        <Online online={online} rtc={rtc} initialCode={INVITE_ROOM} onBack={() => { rtc.stop(); online.actions.leave(); setScreen("home"); }} />
       )}
     </div>
   );
@@ -141,10 +164,10 @@ function ConfigSummary({ cfg }) {
   );
 }
 
-function Online({ online, rtc, onBack }) {
+function Online({ online, rtc, onBack, initialCode }) {
   const { t } = useLang();
   const [name, setName] = useState("");
-  const [code, setCode] = useState("");
+  const [code, setCode] = useState((initialCode || "").toUpperCase());
   const [players, setPlayers] = useState(4);
 
   if (!SERVER_URL) {
@@ -197,13 +220,29 @@ function Lobby({ online, rtc, onBack }) {
   const room = online.room;
   const isHost = online.you === room.host;
   const filled = room.seats.filter(Boolean).length;
+  const [copied, setCopied] = useState(false);
+
+  function copyInvite() {
+    const link = `${window.location.origin}${window.location.pathname}?room=${room.code}`;
+    const done = () => { setCopied(true); setTimeout(() => setCopied(false), 2200); };
+    try {
+      if (navigator.clipboard?.writeText) navigator.clipboard.writeText(link).then(done, done);
+      else { // fallback for older / in-app browsers
+        const ta = document.createElement("textarea"); ta.value = link; document.body.appendChild(ta);
+        ta.select(); document.execCommand("copy"); document.body.removeChild(ta); done();
+      }
+    } catch { done(); }
+  }
+
   return (
     <div className="stack" style={{ paddingTop: 24 }}>
+      {copied && <div className="toast">{t("copied")}</div>}
       <div className="title-bar"><span className="brand" style={{ fontSize: 26 }}>{t("lobby")}</span><span style={{ display: "flex", gap: 6 }}><LangSwitch /><button className="tag" onClick={onBack}>{t("leave")}</button></span></div>
       <div className="panel center">
         <div className="muted" style={{ fontSize: 12 }}>{t("roomCode")}</div>
         <div className="data" style={{ fontSize: 40, letterSpacing: 8, color: "var(--brass-light)" }}>{room.code}</div>
-        <div className="muted" style={{ fontSize: 12 }}>{t("shareCode")}</div>
+        <div className="muted" style={{ fontSize: 12, marginBottom: 10 }}>{t("shareCode")}</div>
+        <button className="btn btn-primary btn-sm" style={{ width: "100%" }} onClick={copyInvite}>🔗 {t("copyInvite")}</button>
       </div>
       <div className="panel">
         <div className="muted" style={{ fontSize: 12, marginBottom: 8 }}>{t("seats")} ({filled}/{room.players})</div>
