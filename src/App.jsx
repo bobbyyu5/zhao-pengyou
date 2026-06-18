@@ -4,6 +4,7 @@ import Settings from "./ui/Settings.jsx";
 import Rules from "./ui/Rules.jsx";
 import { Seal } from "./ui/Seal.jsx";
 import { VideoTile, SelfView, VideoControls, VideoHint } from "./ui/Video.jsx";
+import AdBanner from "./ui/AdBanner.jsx";
 import { ThemeProvider } from "./theme/theme.jsx";
 import { LanguageProvider, LangSwitch, useLang } from "./i18n/i18n.jsx";
 import { useLocalGame } from "./game/useLocalGame.js";
@@ -70,16 +71,18 @@ function Root() {
         <SelfView stream={rtc.localStream} camOn={rtc.camOn} />
         {rtc.error && <div className="toast">{rtc.error}</div>}
         <VideoHint show={rtc.videoHint && rtc.active} />
+        <AdBanner />
       </>
     );
   }
   if (screen === "localGame" && local.view) {
-    return <>{wechatBanner}<Game {...local} onExit={() => setScreen("home")} /></>;
+    return <>{wechatBanner}<Game {...local} onExit={() => setScreen("home")} /><AdBanner /></>;
   }
 
   return (
     <div className="app">
       {wechatBanner}
+      <AdBanner />
       {showRules && <Rules onClose={() => setShowRules(false)} />}
       {screen === "home" && <Home onLocal={() => setScreen("localSetup")} onOnline={() => setScreen("online")} onSettings={() => setScreen("settings")} onRules={() => setShowRules(true)} />}
       {screen === "settings" && <Settings onBack={() => setScreen("home")} />}

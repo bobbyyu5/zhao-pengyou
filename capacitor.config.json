@@ -1,0 +1,11 @@
+{
+  "appId": "app.vercel.zhaopengyou",
+  "appName": "找朋友 Zhao Pengyou",
+  "webDir": "dist",
+  "server": { "androidScheme": "https" },
+  "plugins": {
+    "AdMob": {
+      "applicationId": "ca-app-pub-3940256099942544~3347511713"
+    }
+  }
+}
