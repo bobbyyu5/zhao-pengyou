@@ -46,7 +46,9 @@ export default function Game({ view, names, seal, toast, actions, onExit, videoT
     return ids;
   }, [myTurn, view.handNumber, view.trick.length, view.phase, you]);
 
+  function haptic(ms) { try { navigator.vibrate?.(ms); } catch {} }
   function toggle(id) {
+    haptic(8);
     setSel((prev) => { const next = new Set(prev); next.has(id) ? next.delete(id) : next.add(id); return next; });
   }
 
@@ -113,12 +115,12 @@ export default function Game({ view, names, seal, toast, actions, onExit, videoT
               </span>
             )}
           </div>
-          <div className="hand">
-            {view.yourHand.map((c) => {
+          <div className="hand" key={view.handNumber}>
+            {view.yourHand.map((c, i) => {
               const selectable = view.phase === "bury" || view.phase === "call" || myTurn;
               const legal = legalIds ? legalIds.has(c.id) : null;
               return (
-                <Card key={c.id} card={c}
+                <Card key={c.id} card={c} style={{ "--i": i }}
                   level={view.level} trumpSuit={view.trumpSuit}
                   selected={sel.has(c.id)}
                   legal={legal === true} glow={legal === true} illegal={legal === false}
@@ -129,7 +131,7 @@ export default function Game({ view, names, seal, toast, actions, onExit, videoT
           </div>
           {myTurn && (
             <button className="btn btn-primary" disabled={selectedCards.length === 0}
-              onClick={() => { actions.humanPlay(selectedCards); setSel(new Set()); }}>
+              onClick={() => { haptic(14); actions.humanPlay(selectedCards); setSel(new Set()); }}>
               {t("play")} ({selectedCards.length})
             </button>
           )}

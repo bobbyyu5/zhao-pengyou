@@ -27,7 +27,7 @@ export default function Hud({ trumpSuit, level, grabberPoints, passLine }) {
       </div>
       <div className="pts">
         <small>{t("grabbers")}</small>
-        <b className="data">{grabberPoints}<span className="of"> / {passLine}</span></b>
+        <b className="data"><span className="bump-num" key={grabberPoints}>{grabberPoints}</span><span className="of"> / {passLine}</span></b>
       </div>
     </div>
   );
