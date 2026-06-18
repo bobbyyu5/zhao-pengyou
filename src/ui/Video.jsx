@@ -11,6 +11,13 @@ export function VideoTile({ stream, muted, className }) {
     style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "50%" }} />;
 }
 
+/** Translated toast shown when a peer's camera connection fails (commonly cellular). */
+export function VideoHint({ show }) {
+  const { t } = useLang();
+  if (!show) return null;
+  return <div className="toast" style={{ maxWidth: 320, textAlign: "center", lineHeight: 1.4 }}>{t("videoTrouble")}</div>;
+}
+
 /** Floating self-view (picture-in-picture) while the camera is on. */
 export function SelfView({ stream, camOn }) {
   if (!stream) return null;

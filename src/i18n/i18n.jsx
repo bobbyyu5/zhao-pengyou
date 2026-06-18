@@ -72,6 +72,15 @@ const DICT = {
   camOn: { zh: "🚫 开摄像头", en: "🚫 Camera on", ja: "🚫 カメラ再開" },
   cantConnectServer: { zh: "无法连接服务器", en: "Server unreachable", ja: "サーバーに接続できません" },
 
+  // leave-game confirmation
+  leaveConfirmTitle: { zh: "离开游戏？", en: "Leave the game?", ja: "ゲームを退出しますか？" },
+  leaveConfirmBody: { zh: "当前这局会丢失，无法恢复。", en: "The current game will be lost and can't be recovered.", ja: "現在のゲームは失われ、元に戻せません。" },
+  leaveConfirmYes: { zh: "离开", en: "Leave", ja: "退出" },
+  leaveConfirmNo: { zh: "继续游戏", en: "Keep playing", ja: "続ける" },
+
+  // video fallback
+  videoTrouble: { zh: "摄像头连接失败 — 在 WiFi 下效果最好（手机流量可能连不上）。", en: "Camera couldn't connect — works best on WiFi (cellular may block it).", ja: "カメラに接続できませんでした — WiFiで最適です（モバイル回線は不可の場合あり）。" },
+
   // game / HUD
   stats: { zh: "战绩", en: "Stats", ja: "成績" },
   roundOverTag: { zh: "结束", en: "End", ja: "終了" },

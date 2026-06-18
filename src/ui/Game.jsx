@@ -16,6 +16,7 @@ export default function Game({ view, names, seal, toast, actions, onExit, videoT
   const [sel, setSel] = useState(() => new Set());
   const [showStats, setShowStats] = useState(false);
   const [showRules, setShowRules] = useState(false);
+  const [confirmExit, setConfirmExit] = useState(false);
   useEffect(() => { setSel(new Set()); }, [view.phase, view.turn, view.handNumber]);
 
   const historyRef = useRef([]);
@@ -57,6 +58,18 @@ export default function Game({ view, names, seal, toast, actions, onExit, videoT
       {toast && <div className="toast">{toast}</div>}
       {showStats && <Stats history={historyRef.current} names={names} players={view.players} you={view.you} onClose={() => setShowStats(false)} />}
       {showRules && <Rules config={view.config} onClose={() => setShowRules(false)} />}
+      {confirmExit && (
+        <div className="seal-overlay" onClick={() => setConfirmExit(false)}>
+          <div className="panel" style={{ maxWidth: 320, margin: 16 }} onClick={(e) => e.stopPropagation()}>
+            <p className="head" style={{ marginTop: 0, fontSize: 18 }}>{t("leaveConfirmTitle")}</p>
+            <p className="muted" style={{ fontSize: 13 }}>{t("leaveConfirmBody")}</p>
+            <div className="row">
+              <button className="btn btn-ghost" onClick={() => setConfirmExit(false)}>{t("leaveConfirmNo")}</button>
+              <button className="btn btn-cinnabar" onClick={onExit}>{t("leaveConfirmYes")}</button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="title-bar">
         <span className="brand">找朋友</span>
@@ -65,7 +78,7 @@ export default function Game({ view, names, seal, toast, actions, onExit, videoT
           {videoControls}
           <button className="tag" onClick={() => setShowRules(true)}>{t("rulesBtn")}</button>
           <button className="tag" onClick={() => setShowStats(true)}>{t("stats")}</button>
-          <button className="tag" onClick={onExit}>
+          <button className="tag" onClick={() => (view.roundOver ? onExit() : setConfirmExit(true))}>
             {view.roundOver ? t("roundOverTag") : t("handTag", { n: view.handNumber, p: view.players })}
           </button>
         </span>

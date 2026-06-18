@@ -3,7 +3,7 @@ import Game from "./ui/Game.jsx";
 import Settings from "./ui/Settings.jsx";
 import Rules from "./ui/Rules.jsx";
 import { Seal } from "./ui/Seal.jsx";
-import { VideoTile, SelfView, VideoControls } from "./ui/Video.jsx";
+import { VideoTile, SelfView, VideoControls, VideoHint } from "./ui/Video.jsx";
 import { ThemeProvider } from "./theme/theme.jsx";
 import { LanguageProvider, LangSwitch, useLang } from "./i18n/i18n.jsx";
 import { useLocalGame } from "./game/useLocalGame.js";
@@ -47,6 +47,7 @@ function Root() {
           onExit={() => { rtc.stop(); online.actions.leave(); setScreen("home"); }} />
         <SelfView stream={rtc.localStream} camOn={rtc.camOn} />
         {rtc.error && <div className="toast">{rtc.error}</div>}
+        <VideoHint show={rtc.videoHint && rtc.active} />
       </>
     );
   }

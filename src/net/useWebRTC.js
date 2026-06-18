@@ -33,6 +33,7 @@ export function useWebRTC({ socket, you, players }) {
   const [micOn, setMicOn] = useState(true);
   const [camOn, setCamOn] = useState(true);
   const [error, setError] = useState(null);
+  const [videoHint, setVideoHint] = useState(false); // a peer connection failed (often cellular)
 
   const pcs = useRef({});       // seat -> RTCPeerConnection
   const localRef = useRef(null);
@@ -43,9 +44,11 @@ export function useWebRTC({ socket, you, players }) {
     pcs.current[seat] = pc;
     if (localRef.current) localRef.current.getTracks().forEach((t) => pc.addTrack(t, localRef.current));
     pc.onicecandidate = (e) => { if (e.candidate) socket.emit("rtc-signal", { toSeat: seat, data: { ice: e.candidate } }); };
-    pc.ontrack = (e) => setRemote((r) => ({ ...r, [seat]: e.streams[0] }));
+    pc.ontrack = (e) => { setVideoHint(false); setRemote((r) => ({ ...r, [seat]: e.streams[0] })); };
     pc.onconnectionstatechange = () => {
-      if (["failed", "closed", "disconnected"].includes(pc.connectionState)) closePC(seat);
+      const st = pc.connectionState;
+      if (st === "failed") { setVideoHint(true); closePC(seat); } // couldn't connect — often cellular/CGNAT
+      else if (["closed", "disconnected"].includes(st)) closePC(seat);
     };
     return pc;
   }
@@ -138,5 +141,5 @@ export function useWebRTC({ socket, you, players }) {
 
   useEffect(() => () => stop(), []); // cleanup on unmount
 
-  return { localStream, remote, active, micOn, camOn, error, start, stop, toggleMic, toggleCam };
+  return { localStream, remote, active, micOn, camOn, error, videoHint, start, stop, toggleMic, toggleCam };
 }

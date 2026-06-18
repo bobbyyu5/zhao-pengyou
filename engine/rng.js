@@ -44,9 +44,22 @@ export function shuffle(arr, rng) {
   return b;
 }
 
-/** A reasonable default seed when none is supplied. Caller may pass Date-based entropy. */
+/**
+ * A fresh random seed for a real game. Prefers crypto-grade entropy (crypto.getRandomValues,
+ * available in browsers and Node) so each deal is genuinely unpredictable; falls back to
+ * Date+Math.random only if crypto is somehow unavailable. The seed then drives a uniform
+ * Fisher–Yates shuffle (shuffle() above), which is an unbiased shuffle — every ordering of
+ * the deck is equally likely.
+ */
 export function randomSeed() {
-  // Avoid Date.now()/Math.random() coupling assumptions; combine both where available.
+  try {
+    const c = typeof globalThis !== "undefined" ? globalThis.crypto : null;
+    if (c && c.getRandomValues) {
+      const a = new Uint32Array(4);
+      c.getRandomValues(a);
+      return "s" + Array.from(a).map((x) => x.toString(36)).join("");
+    }
+  } catch { /* fall through */ }
   const t = (typeof Date !== "undefined" ? Date.now() : 0);
   const r = (typeof Math !== "undefined" ? Math.random() : 0);
   return `s${t.toString(36)}${Math.floor(r * 1e9).toString(36)}`;
