@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 import Game from "./ui/Game.jsx";
 import Settings from "./ui/Settings.jsx";
 import Rules from "./ui/Rules.jsx";
@@ -39,7 +39,7 @@ function Root() {
   const [showRules, setShowRules] = useState(false);
   const [wechatDismissed, setWechatDismissed] = useState(false);
   const { t } = useLang();
-  useEffect(() => { recordSession(); }, []); // update the daily streak on open
+  useState(() => recordSession()); // update the daily streak once, before first render
   const local = useLocalGame();
   const online = useOnlineGame();
   const rtc = useWebRTC({ socket: online.socket, you: online.you, players: online.room?.players });
