@@ -8,8 +8,11 @@ export const cloudEnabled = !!SERVER_URL && (import.meta.env?.VITE_CLOUD_SYNC ==
 export const googleClientId = import.meta.env?.VITE_GOOGLE_CLIENT_ID || "";
 
 const TKEY = "zhao.acctToken";
+const NKEY = "zhao.acctName";
 function getToken() { try { return localStorage.getItem(TKEY); } catch { return null; } }
 function setToken(t) { try { localStorage.setItem(TKEY, t); } catch {} }
+export function getAccountName() { try { return localStorage.getItem(NKEY) || null; } catch { return null; } }
+function setAccountName(n) { try { if (n) localStorage.setItem(NKEY, n); } catch {} }
 
 async function api(path, opts = {}) {
   const r = await fetch(`${SERVER_URL}${path}`, opts);
@@ -79,7 +82,7 @@ export async function googleSignIn(idToken, name) {
       method: "POST", headers: { "content-type": "application/json" },
       body: JSON.stringify({ idToken, name, guestToken: getToken() }),
     });
-    if (j.token) { setToken(j.token); return j; }
+    if (j.token) { setToken(j.token); setAccountName(j.name); return j; }
   } catch {}
   return null;
 }

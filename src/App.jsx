@@ -3,6 +3,7 @@ import Game from "./ui/Game.jsx";
 import Settings from "./ui/Settings.jsx";
 import Rules from "./ui/Rules.jsx";
 import Friends from "./ui/Friends.jsx";
+import GoogleSignIn from "./ui/GoogleSignIn.jsx";
 import { Seal } from "./ui/Seal.jsx";
 import { VideoTile, SelfView, VideoControls, VideoHint } from "./ui/Video.jsx";
 import AdBanner from "./ui/AdBanner.jsx";
@@ -139,6 +140,7 @@ function Home({ onLocal, onOnline, onSettings, onRules, onFriends }) {
         </div>
       </div>
       <p className="muted center" style={{ fontSize: 11, maxWidth: 300 }}>{t("homeTagline1")}</p>
+      <GoogleSignIn />
     </div>
   );
 }

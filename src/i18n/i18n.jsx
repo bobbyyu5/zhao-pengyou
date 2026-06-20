@@ -166,6 +166,8 @@ const DICT = {
   noFriendsYet: { zh: "还没有好友。分享你的码，一起上榜！", en: "No friends yet — share your code to compete!", ja: "まだフレンドがいません。コードを共有しよう！" },
   colWins: { zh: "胜", en: "Wins", ja: "勝" },
   colStreak: { zh: "最佳", en: "Best", ja: "最高" },
+  signedInAs: { zh: "已登录：{name}", en: "Signed in as {name}", ja: "ログイン中：{name}" },
+  signInHint: { zh: "用 Google 登录，进度跟着你换手机", en: "Sign in to carry your progress to a new phone", ja: "ログインで進捗を別の端末へ引き継ぎ" },
 
   // rules / scoring reference
   rulesBtn: { zh: "规则", en: "Rules", ja: "ルール" },
