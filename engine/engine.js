@@ -515,6 +515,7 @@ function resolveTrick(s) {
   out.tricksPlayed += 1;
   out.lastTrickWinner = winnerSeat;
   out.lastTrickByGrabber = grabbers;
+  out._lastTrickPoints = points;
   out._lastTrickCards = out.trick.map((t) => ({ seat: t.seat, cards: t.cards.slice() }));
   out._lastTrickWinnerForm = bestForm;
   pushLog(out, `${winnerSeat} 赢墩 (${points} 分)${grabbers ? " · 抓分方" : ""}。`,
@@ -740,6 +741,7 @@ export function viewFor(s, seat) {
     dealtCount: s.dealtCount,
     log: s.log.slice(0, 20),
     lastTrickWinner: s.lastTrickWinner,
+    lastTrickPoints: s._lastTrickPoints ?? 0,
   };
 }
 

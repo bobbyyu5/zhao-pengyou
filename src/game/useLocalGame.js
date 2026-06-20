@@ -6,6 +6,7 @@ import {
 } from "../../engine/index.js";
 
 const BOT_DELAY = 650;
+const TRICK_PAUSE = 1500; // linger after a trick resolves so players can see who won
 
 /**
  * Single-device controller: the human is seat 0, the rest are bots. Holds the full
@@ -20,6 +21,7 @@ export function useLocalGame() {
     seal: null,       // { seat, name } when a friend was just revealed
     toast: null,
     names: null,
+    lastTricks: 0,
   });
   const timers = useRef([]);
   useEffect(() => () => timers.current.forEach(clearTimeout), []);
@@ -94,6 +96,11 @@ export function useLocalGame() {
   function runBots(s) {
     if (s.phase !== "play") { set(s); return; }
     if (s.turn === ref.current.you) { set(s); return; } // wait for the human
+    // After a trick resolves, pause longer so the "who won · points" toast registers.
+    if (s.tricksPlayed < (ref.current.lastTricks ?? 0)) ref.current.lastTricks = 0; // new hand
+    const justResolved = s.tricksPlayed > (ref.current.lastTricks ?? 0);
+    ref.current.lastTricks = s.tricksPlayed;
+    const delay = justResolved ? TRICK_PAUSE : BOT_DELAY;
     schedule(() => {
       const seat = s.turn;
       let ns;
@@ -107,7 +114,7 @@ export function useLocalGame() {
       detectSeal(s, ns);
       set(ns);
       runBots(ns);
-    }, BOT_DELAY);
+    }, delay);
   }
 
   function detectSeal(prev, next) {

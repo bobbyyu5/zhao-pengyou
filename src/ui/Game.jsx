@@ -57,13 +57,34 @@ export default function Game({ view, names, seal, toast, actions, onExit, videoT
     setSel((prev) => { const next = new Set(prev); next.has(id) ? next.delete(id) : next.add(id); return next; });
   }
 
-  // trick-win sound when a trick resolves; reveal sound when a friend is stamped
+  // trick-win sound + a "who won · how many points" toast so the game is followable
   const prevTricks = useRef(0);
+  const [trickMsg, setTrickMsg] = useState(null);
+  const trickTimer = useRef(null);
   useEffect(() => {
-    if (view.tricksPlayed > prevTricks.current) { sound.trick(); prevTricks.current = view.tricksPlayed; }
+    if (view.tricksPlayed > prevTricks.current) {
+      prevTricks.current = view.tricksPlayed;
+      sound.trick();
+      const w = view.lastTrickWinner;
+      if (w != null) {
+        const name = seatName(w, view.players, you, names, t);
+        const pts = view.lastTrickPoints || 0;
+        setTrickMsg(pts > 0 ? t("trickWon", { name, pts }) : t("trickWonNoPts", { name }));
+        clearTimeout(trickTimer.current);
+        trickTimer.current = setTimeout(() => setTrickMsg(null), 1800);
+      }
+    }
     if (view.tricksPlayed < prevTricks.current) prevTricks.current = view.tricksPlayed; // new hand
   }, [view.tricksPlayed]);
   useEffect(() => { if (seal) sound.reveal(); }, [seal]);
+
+  // scroll the first legal (glowing) card into view so playable cards are never below the fold
+  const handRef = useRef(null);
+  useEffect(() => {
+    if (!myTurn || !handRef.current) return;
+    const el = handRef.current.querySelector(".card.legal.glow");
+    if (el) el.scrollIntoView({ block: "nearest", behavior: "smooth" });
+  }, [myTurn, view.trick.length]);
 
   const selectedCards = view.yourHand.filter((c) => sel.has(c.id));
 
@@ -71,6 +92,7 @@ export default function Game({ view, names, seal, toast, actions, onExit, videoT
     <div className="app">
       {seal && <SealReveal seatName={seal.name || seatName(seal.seat, view.players, you, names, t)} onDone={actions.dismissSeal} />}
       {toast && <div className="toast">{toast}</div>}
+      {trickMsg && <div className="trick-toast">{trickMsg}</div>}
       {showStats && <Stats history={historyRef.current} names={names} players={view.players} you={view.you} onClose={() => setShowStats(false)} />}
       {showRules && <Rules config={view.config} onClose={() => setShowRules(false)} />}
       {confirmExit && (
@@ -120,6 +142,7 @@ export default function Game({ view, names, seal, toast, actions, onExit, videoT
           <div className="hand-meta">
             <span style={{ display: "flex", gap: 8, alignItems: "center" }}>
               <span className="muted" style={{ fontSize: 12 }}>{t("yourHand")} ({view.yourHand.length})</span>
+              {myTurn && <span className="turn-pill">{t("yourTurn")}</span>}
               {isDealer && <span className="you-friend" style={{ background: "var(--brass)", color: "var(--felt-deep)" }}>{t("youAreDealer")}</span>}
               {!isDealer && view.friendSeats.includes(you) && <span className="you-friend">{t("youAreFriend")}</span>}
             </span>
@@ -129,7 +152,7 @@ export default function Game({ view, names, seal, toast, actions, onExit, videoT
               </span>
             )}
           </div>
-          <div className="hand" key={view.handNumber}>
+          <div className="hand" key={view.handNumber} ref={handRef}>
             {view.yourHand.map((c, i) => {
               const selectable = view.phase === "bury" || view.phase === "call" || myTurn;
               const legal = legalIds ? legalIds.has(c.id) : null;

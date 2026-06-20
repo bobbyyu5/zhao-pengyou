@@ -59,10 +59,10 @@ export default function Table({ view, names, videoTiles }) {
 
       {/* center trick */}
       <div className="trick-center">
-        {trick.length === 0 && (
-          <span className="muted" style={{ fontSize: 12 }}>
-            {view.phase === "play" ? (turn === you ? "" : "…") : ""}
-          </span>
+        {trick.length === 0 && view.phase === "play" && (
+          turn === you
+            ? <span className="turn-cue">{t("yourTurnLead")}</span>
+            : <span className="muted" style={{ fontSize: 12 }}>{t("waitingPlay")}</span>
         )}
         {trick.map((tp, i) => (
           <div key={i} className="trick-play">

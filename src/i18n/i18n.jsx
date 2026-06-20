@@ -97,6 +97,12 @@ const DICT = {
   friendCardsLabel: { zh: "朋友牌：", en: "Friend cards: ", ja: "友カード：" },
   play: { zh: "出牌", en: "Play", ja: "出す" },
   dealerBurying: { zh: "庄家正在埋牌…", en: "Dealer is burying the kitty…", ja: "親が底札を伏せています…" },
+  yourTurnLead: { zh: "轮到你 · 出一张牌", en: "Your turn — play a card", ja: "あなたの番 — カードを出す" },
+  yourTurnFollow: { zh: "轮到你 · 跟牌", en: "Your turn — follow", ja: "あなたの番 — 続けて出す" },
+  yourTurn: { zh: "轮到你", en: "Your turn", ja: "あなたの番" },
+  waitingPlay: { zh: "等待出牌…", en: "Waiting…", ja: "待機中…" },
+  trickWon: { zh: "{name} 赢墩 · {pts} 分", en: "{name} won the trick · {pts} pts", ja: "{name} がこの場を取った · {pts}点" },
+  trickWonNoPts: { zh: "{name} 赢墩", en: "{name} won the trick", ja: "{name} がこの場を取った" },
   dealerCalling: { zh: "庄家正在叫朋友…", en: "Dealer is calling friends…", ja: "親が友を指名しています…" },
 
   // bidding
