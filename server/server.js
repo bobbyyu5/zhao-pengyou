@@ -13,6 +13,7 @@ import {
   botBid, botBury, botCallFriends, botPlay,
   getConfig,
 } from "../engine/index.js";
+import { initStore, createGuest, userIdForToken, getProgress, mergeProgress, upsertGoogleUser } from "./store.js";
 
 const PORT = process.env.PORT || 8787;
 const ORIGIN = process.env.CLIENT_ORIGIN || "*";
@@ -20,8 +21,53 @@ const BID_WINDOW_MS = Number(process.env.BID_WINDOW_MS || 12000);
 const BOT_DELAY_MS = Number(process.env.BOT_DELAY_MS || 700);
 const TURN_TIMEOUT_MS = Number(process.env.TURN_TIMEOUT_MS || 45000);
 
+// ── Accounts + progress API (additive; dormant until DATABASE_URL/VITE_CLOUD_SYNC) ──
+function sendJSON(res, code, obj) {
+  res.writeHead(code, {
+    "content-type": "application/json",
+    "access-control-allow-origin": ORIGIN,
+    "access-control-allow-headers": "content-type,authorization",
+    "access-control-allow-methods": "GET,POST,OPTIONS",
+  });
+  res.end(JSON.stringify(obj));
+}
+function readBody(req) {
+  return new Promise((resolve) => {
+    let d = ""; req.on("data", (c) => { d += c; if (d.length > 1e5) req.destroy(); });
+    req.on("end", () => { try { resolve(d ? JSON.parse(d) : {}); } catch { resolve({}); } });
+  });
+}
+function bearer(req) { const h = req.headers.authorization || ""; return h.startsWith("Bearer ") ? h.slice(7) : null; }
+
+async function handleApi(req, res, pathname) {
+  if (req.method === "OPTIONS") { sendJSON(res, 204, {}); return; }
+  try {
+    if (pathname === "/api/auth/guest" && req.method === "POST") {
+      const b = await readBody(req); sendJSON(res, 200, await createGuest(b.name)); return;
+    }
+    if (pathname === "/api/auth/google" && req.method === "POST") {
+      const b = await readBody(req);
+      const { OAuth2Client } = await import("google-auth-library");
+      const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+      const ticket = await client.verifyIdToken({ idToken: b.idToken, audience: process.env.GOOGLE_CLIENT_ID });
+      const p = ticket.getPayload();
+      const out = await upsertGoogleUser(p.sub, b.name || p.name, b.guestToken);
+      sendJSON(res, 200, { ...out, name: p.name }); return;
+    }
+    if (pathname === "/api/progress") {
+      const uid = await userIdForToken(bearer(req));
+      if (!uid) { sendJSON(res, 401, { error: "unauthorized" }); return; }
+      if (req.method === "GET") { sendJSON(res, 200, await getProgress(uid)); return; }
+      if (req.method === "POST") { const b = await readBody(req); sendJSON(res, 200, await mergeProgress(uid, b)); return; }
+    }
+    sendJSON(res, 404, { error: "not found" });
+  } catch (e) { sendJSON(res, 400, { error: String(e.message || e) }); }
+}
+
 const http = createServer((req, res) => {
-  if (req.url === "/health") { res.writeHead(200); res.end("ok"); return; }
+  const pathname = (req.url || "/").split("?")[0];
+  if (pathname === "/health") { res.writeHead(200); res.end("ok"); return; }
+  if (pathname.startsWith("/api/")) { handleApi(req, res, pathname); return; }
   res.writeHead(200, { "content-type": "text/plain" });
   res.end("找朋友 Zhao Pengyou server is running.");
 });
@@ -373,6 +419,10 @@ function handleLeave(socket) {
   socket.leave(code);
   socket.data = {};
 }
+
+initStore()
+  .then((info) => console.log(`找朋友 store: ${info.mode}`))
+  .catch((e) => console.error("store init failed (continuing in memory):", e.message));
 
 http.listen(PORT, () => {
   console.log(`找朋友 server listening on :${PORT} (origin ${ORIGIN})`);

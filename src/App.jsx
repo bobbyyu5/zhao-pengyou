@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import Game from "./ui/Game.jsx";
 import Settings from "./ui/Settings.jsx";
 import Rules from "./ui/Rules.jsx";
@@ -11,7 +11,8 @@ import SoundToggle from "./ui/SoundToggle.jsx";
 import { useLocalGame } from "./game/useLocalGame.js";
 import { useOnlineGame, SERVER_URL } from "./net/useOnlineGame.js";
 import { useWebRTC } from "./net/useWebRTC.js";
-import { recordSession, getProgress } from "./progress/progress.js";
+import { recordSession, getProgress, mergeRemote } from "./progress/progress.js";
+import { cloudEnabled, syncProgress } from "./account/account.js";
 import { CONFIG, MIN_PLAYERS, MAX_PLAYERS } from "../engine/index.js";
 
 const COUNTS = Array.from({ length: MAX_PLAYERS - MIN_PLAYERS + 1 }, (_, i) => MIN_PLAYERS + i);
@@ -40,6 +41,16 @@ function Root() {
   const [wechatDismissed, setWechatDismissed] = useState(false);
   const { t } = useLang();
   useState(() => recordSession()); // update the daily streak once, before first render
+  // Cloud sync (dormant unless VITE_CLOUD_SYNC=1): reconcile local progress with the server.
+  useEffect(() => {
+    if (!cloudEnabled) return;
+    let alive = true;
+    const sync = () => syncProgress(getProgress()).then((merged) => { if (alive && merged) mergeRemote(merged); });
+    sync(); // on open
+    const onVisible = () => { if (document.visibilityState === "visible") sync(); };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => { alive = false; document.removeEventListener("visibilitychange", onVisible); };
+  }, []);
   const local = useLocalGame();
   const online = useOnlineGame();
   const rtc = useWebRTC({ socket: online.socket, you: online.you, players: online.room?.players });

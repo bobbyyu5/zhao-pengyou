@@ -64,6 +64,23 @@ export function checkUnlocks() {
   return newly;
 }
 
+/** Merge server-side progress into the local cache (used by cloud sync). Returns merged. */
+export function mergeRemote(remote) {
+  if (!remote) return cache;
+  cache = {
+    ...cache,
+    handsPlayed: Math.max(cache.handsPlayed || 0, remote.handsPlayed || 0),
+    handsWon: Math.max(cache.handsWon || 0, remote.handsWon || 0),
+    roundsWon: Math.max(cache.roundsWon || 0, remote.roundsWon || 0),
+    streak: Math.max(cache.streak || 0, remote.streak || 0),
+    bestStreak: Math.max(cache.bestStreak || 0, remote.bestStreak || 0),
+    lastPlayed: [cache.lastPlayed, remote.lastPlayed].filter(Boolean).sort().pop() || null,
+    unlocked: Array.from(new Set([...(cache.unlocked || []), ...(remote.unlocked || [])])),
+  };
+  save();
+  return cache;
+}
+
 /** Record a finished hand. Returns newly-unlocked card-back ids (for a celebration). */
 export function recordHandResult({ won, roundWon }) {
   cache.handsPlayed = (cache.handsPlayed || 0) + 1;
