@@ -13,7 +13,10 @@ import {
   botBid, botBury, botCallFriends, botPlay,
   getConfig,
 } from "../engine/index.js";
-import { initStore, createGuest, userIdForToken, getProgress, mergeProgress, upsertGoogleUser } from "./store.js";
+import {
+  initStore, createGuest, userIdForToken, getProgress, mergeProgress, upsertGoogleUser,
+  getMe, addFriendByCode, getLeaderboard,
+} from "./store.js";
 
 const PORT = process.env.PORT || 8787;
 const ORIGIN = process.env.CLIENT_ORIGIN || "*";
@@ -59,6 +62,24 @@ async function handleApi(req, res, pathname) {
       if (!uid) { sendJSON(res, 401, { error: "unauthorized" }); return; }
       if (req.method === "GET") { sendJSON(res, 200, await getProgress(uid)); return; }
       if (req.method === "POST") { const b = await readBody(req); sendJSON(res, 200, await mergeProgress(uid, b)); return; }
+    }
+    if (pathname === "/api/me" && req.method === "GET") {
+      const uid = await userIdForToken(bearer(req));
+      if (!uid) { sendJSON(res, 401, { error: "unauthorized" }); return; }
+      sendJSON(res, 200, await getMe(uid)); return;
+    }
+    if (pathname === "/api/friends/add" && req.method === "POST") {
+      const uid = await userIdForToken(bearer(req));
+      if (!uid) { sendJSON(res, 401, { error: "unauthorized" }); return; }
+      const b = await readBody(req);
+      const f = await addFriendByCode(uid, b.code);
+      if (!f) { sendJSON(res, 404, { error: "friend code not found" }); return; }
+      sendJSON(res, 200, { ok: true, friend: f }); return;
+    }
+    if (pathname === "/api/leaderboard" && req.method === "GET") {
+      const uid = await userIdForToken(bearer(req));
+      if (!uid) { sendJSON(res, 401, { error: "unauthorized" }); return; }
+      sendJSON(res, 200, await getLeaderboard(uid)); return;
     }
     sendJSON(res, 404, { error: "not found" });
   } catch (e) { sendJSON(res, 400, { error: String(e.message || e) }); }

@@ -8,7 +8,9 @@ import { randomUUID } from "node:crypto";
 const DATABASE_URL = process.env.DATABASE_URL || null;
 let pool = null;
 
-const mem = { users: new Map(), tokens: new Map(), progress: new Map() };
+const mem = { users: new Map(), tokens: new Map(), progress: new Map(), friends: new Map() };
+const CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+function genCode() { let s = ""; for (let i = 0; i < 7; i++) s += CODE_ALPHABET[Math.floor(Math.random() * CODE_ALPHABET.length)]; return s; }
 const DEFAULT_UNLOCKED = ["cinnabar-seal", "pine-lattice"];
 function emptyProgress() {
   return { handsPlayed: 0, handsWon: 0, roundsWon: 0, streak: 0, bestStreak: 0, lastPlayed: null, unlocked: [...DEFAULT_UNLOCKED] };
@@ -16,8 +18,9 @@ function emptyProgress() {
 
 const SCHEMA = `
 CREATE TABLE IF NOT EXISTS users (
-  id uuid PRIMARY KEY, google_sub text UNIQUE, display_name text,
+  id uuid PRIMARY KEY, google_sub text UNIQUE, display_name text, friend_code text UNIQUE,
   created_at timestamptz DEFAULT now(), last_seen timestamptz DEFAULT now());
+ALTER TABLE users ADD COLUMN IF NOT EXISTS friend_code text UNIQUE;
 CREATE TABLE IF NOT EXISTS auth_tokens (
   token text PRIMARY KEY, user_id uuid REFERENCES users(id) ON DELETE CASCADE,
   created_at timestamptz DEFAULT now());
@@ -66,17 +69,18 @@ function merge(a, b) {
 export async function createGuest(name) {
   const id = randomUUID();
   const token = randomUUID().replace(/-/g, "");
+  const code = genCode();
   const nm = String(name || "玩家").slice(0, 16);
   if (pool) {
-    await pool.query("INSERT INTO users(id, display_name) VALUES($1,$2)", [id, nm]);
+    await pool.query("INSERT INTO users(id, display_name, friend_code) VALUES($1,$2,$3)", [id, nm, code]);
     await pool.query("INSERT INTO auth_tokens(token, user_id) VALUES($1,$2)", [token, id]);
     await pool.query("INSERT INTO progress(user_id, unlocked) VALUES($1,$2)", [id, DEFAULT_UNLOCKED]);
   } else {
-    mem.users.set(id, { id, display_name: nm });
+    mem.users.set(id, { id, display_name: nm, friend_code: code });
     mem.tokens.set(token, id);
     mem.progress.set(id, emptyProgress());
   }
-  return { token, userId: id, name: nm };
+  return { token, userId: id, name: nm, friendCode: code };
 }
 
 export async function userIdForToken(token) {
@@ -111,12 +115,12 @@ export async function upsertGoogleUser(sub, name, guestToken) {
     if (r.rows[0]) userId = r.rows[0].id;
     else {
       userId = randomUUID();
-      await pool.query("INSERT INTO users(id,google_sub,display_name) VALUES($1,$2,$3)", [userId, sub, String(name || "玩家").slice(0, 16)]);
+      await pool.query("INSERT INTO users(id,google_sub,display_name,friend_code) VALUES($1,$2,$3,$4)", [userId, sub, String(name || "玩家").slice(0, 16), genCode()]);
       await pool.query("INSERT INTO progress(user_id,unlocked) VALUES($1,$2) ON CONFLICT DO NOTHING", [userId, DEFAULT_UNLOCKED]);
     }
   } else {
     for (const [id, u] of mem.users) if (u.google_sub === sub) userId = id;
-    if (!userId) { userId = randomUUID(); mem.users.set(userId, { id: userId, google_sub: sub, display_name: String(name || "玩家").slice(0, 16) }); mem.progress.set(userId, emptyProgress()); }
+    if (!userId) { userId = randomUUID(); mem.users.set(userId, { id: userId, google_sub: sub, display_name: String(name || "玩家").slice(0, 16), friend_code: genCode() }); mem.progress.set(userId, emptyProgress()); }
   }
   if (guestToken) {
     const guestId = await userIdForToken(guestToken);
@@ -126,4 +130,54 @@ export async function upsertGoogleUser(sub, name, guestToken) {
   if (pool) await pool.query("INSERT INTO auth_tokens(token,user_id) VALUES($1,$2)", [token, userId]);
   else mem.tokens.set(token, userId);
   return { token, userId };
+}
+
+// ── Friends + leaderboard ──────────────────────────────────────────────────
+export async function getMe(userId) {
+  if (pool) { const r = await pool.query("SELECT display_name, friend_code FROM users WHERE id=$1", [userId]); const u = r.rows[0]; return u ? { userId, name: u.display_name, friendCode: u.friend_code } : null; }
+  const u = mem.users.get(userId); return u ? { userId, name: u.display_name, friendCode: u.friend_code } : null;
+}
+
+async function userIdForCode(code) {
+  const c = String(code || "").toUpperCase();
+  if (pool) { const r = await pool.query("SELECT id FROM users WHERE friend_code=$1", [c]); return r.rows[0]?.id || null; }
+  for (const [id, u] of mem.users) if (u.friend_code === c) return id;
+  return null;
+}
+
+/** Add a friend by their code (bidirectional). Returns the friend's name, or null if not found. */
+export async function addFriendByCode(userId, code) {
+  const friendId = await userIdForCode(code);
+  if (!friendId || friendId === userId) return null;
+  if (pool) {
+    await pool.query("INSERT INTO friends(user_id,friend_id) VALUES($1,$2),($2,$1) ON CONFLICT DO NOTHING", [userId, friendId]);
+  } else {
+    if (!mem.friends.has(userId)) mem.friends.set(userId, new Set());
+    if (!mem.friends.has(friendId)) mem.friends.set(friendId, new Set());
+    mem.friends.get(userId).add(friendId);
+    mem.friends.get(friendId).add(userId);
+  }
+  const f = await getMe(friendId);
+  return f ? { name: f.name } : null;
+}
+
+/** Leaderboard = you + your friends, ranked by best streak then wins. */
+export async function getLeaderboard(userId) {
+  let rows = [];
+  if (pool) {
+    const r = await pool.query(
+      `SELECT u.id, u.display_name AS name, COALESCE(pr.hands_won,0) AS hands_won,
+              COALESCE(pr.best_streak,0) AS best_streak, COALESCE(pr.streak,0) AS streak
+       FROM users u LEFT JOIN progress pr ON pr.user_id = u.id
+       WHERE u.id = $1 OR u.id IN (SELECT friend_id FROM friends WHERE user_id = $1)`, [userId]);
+    rows = r.rows.map((x) => ({ id: x.id, name: x.name, handsWon: x.hands_won, bestStreak: x.best_streak, streak: x.streak }));
+  } else {
+    const ids = new Set([userId, ...(mem.friends.get(userId) || [])]);
+    for (const id of ids) {
+      const u = mem.users.get(id); const p = mem.progress.get(id) || {};
+      if (u) rows.push({ id, name: u.display_name, handsWon: p.handsWon || 0, bestStreak: p.bestStreak || 0, streak: p.streak || 0 });
+    }
+  }
+  rows.sort((a, b) => b.bestStreak - a.bestStreak || b.handsWon - a.handsWon);
+  return rows.map((x, i) => ({ ...x, rank: i + 1, you: x.id === userId }));
 }

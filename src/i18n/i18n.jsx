@@ -154,6 +154,19 @@ const DICT = {
   streakChip: { zh: "🔥 连续 {n} 天", en: "🔥 {n}-day streak", ja: "🔥 {n}日連続" },
   yourProgress: { zh: "战绩：{played} 手 · {won} 胜", en: "{played} hands · {won} wins", ja: "{played}局 · {won}勝" },
 
+  // friends + leaderboard
+  friends: { zh: "好友榜", en: "Friends", ja: "フレンド" },
+  yourFriendCode: { zh: "你的好友码", en: "Your friend code", ja: "あなたのコード" },
+  copyCode: { zh: "复制好友码", en: "Copy code", ja: "コードをコピー" },
+  addFriendLabel: { zh: "添加好友（输入对方的码）", en: "Add a friend (enter their code)", ja: "フレンド追加（相手のコード）" },
+  add: { zh: "添加", en: "Add", ja: "追加" },
+  friendAdded: { zh: "已添加好友：{name}", en: "Added {name}!", ja: "{name} を追加しました！" },
+  friendNotFound: { zh: "找不到该好友码", en: "Friend code not found", ja: "コードが見つかりません" },
+  leaderboard: { zh: "排行榜（按最佳连胜）", en: "Leaderboard (by best streak)", ja: "ランキング（最高連続）" },
+  noFriendsYet: { zh: "还没有好友。分享你的码，一起上榜！", en: "No friends yet — share your code to compete!", ja: "まだフレンドがいません。コードを共有しよう！" },
+  colWins: { zh: "胜", en: "Wins", ja: "勝" },
+  colStreak: { zh: "最佳", en: "Best", ja: "最高" },
+
   // rules / scoring reference
   rulesBtn: { zh: "规则", en: "Rules", ja: "ルール" },
   rulesTitle: { zh: "规则与算分", en: "Rules & Scoring", ja: "ルールと得点" },

@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import Game from "./ui/Game.jsx";
 import Settings from "./ui/Settings.jsx";
 import Rules from "./ui/Rules.jsx";
+import Friends from "./ui/Friends.jsx";
 import { Seal } from "./ui/Seal.jsx";
 import { VideoTile, SelfView, VideoControls, VideoHint } from "./ui/Video.jsx";
 import AdBanner from "./ui/AdBanner.jsx";
@@ -98,8 +99,9 @@ function Root() {
       {wechatBanner}
       <AdBanner />
       {showRules && <Rules onClose={() => setShowRules(false)} />}
-      {screen === "home" && <Home onLocal={() => setScreen("localSetup")} onOnline={() => setScreen("online")} onSettings={() => setScreen("settings")} onRules={() => setShowRules(true)} />}
+      {screen === "home" && <Home onLocal={() => setScreen("localSetup")} onOnline={() => setScreen("online")} onSettings={() => setScreen("settings")} onRules={() => setShowRules(true)} onFriends={() => setScreen("friends")} />}
       {screen === "settings" && <Settings onBack={() => setScreen("home")} />}
+      {screen === "friends" && <Friends onBack={() => setScreen("home")} />}
       {screen === "localSetup" && (
         <LocalSetup onBack={() => setScreen("home")} onStart={(n) => { local.actions.start(n); setScreen("localGame"); }} />
       )}
@@ -110,7 +112,7 @@ function Root() {
   );
 }
 
-function Home({ onLocal, onOnline, onSettings, onRules }) {
+function Home({ onLocal, onOnline, onSettings, onRules, onFriends }) {
   const { t } = useLang();
   const prog = getProgress();
   return (
@@ -133,6 +135,7 @@ function Home({ onLocal, onOnline, onSettings, onRules }) {
         <div className="row">
           <button className="btn btn-ghost btn-sm" style={{ width: "auto", flex: 1 }} onClick={onRules}>{t("rulesBtn")}</button>
           <button className="btn btn-ghost btn-sm" style={{ width: "auto", flex: 1 }} onClick={onSettings}>{t("cardBacks")}</button>
+          {cloudEnabled && <button className="btn btn-ghost btn-sm" style={{ width: "auto", flex: 1 }} onClick={onFriends}>{t("friends")}</button>}
         </div>
       </div>
       <p className="muted center" style={{ fontSize: 11, maxWidth: 300 }}>{t("homeTagline1")}</p>

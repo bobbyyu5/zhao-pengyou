@@ -44,6 +44,33 @@ export async function syncProgress(localProgress) {
   } catch { return null; }
 }
 
+function authHeader() { const t = getToken(); return t ? { authorization: `Bearer ${t}` } : {}; }
+
+/** This account's profile incl. shareable friend code. Ensures a guest exists first. */
+export async function getMe() {
+  if (!cloudEnabled) return null;
+  await ensureGuest();
+  try { return await api("/api/me", { headers: authHeader() }); } catch { return null; }
+}
+
+/** Add a friend by their code. Returns { friend: { name } } or null. */
+export async function addFriend(code) {
+  if (!cloudEnabled) return null;
+  await ensureGuest();
+  try {
+    return await api("/api/friends/add", {
+      method: "POST", headers: { "content-type": "application/json", ...authHeader() }, body: JSON.stringify({ code }),
+    });
+  } catch { return null; }
+}
+
+/** Leaderboard: you + friends, ranked. Returns [] if disabled/failed. */
+export async function getLeaderboard() {
+  if (!cloudEnabled) return [];
+  await ensureGuest();
+  try { return await api("/api/leaderboard", { headers: authHeader() }); } catch { return []; }
+}
+
 /** Claim the guest account with Google (merges guest progress). Returns {token,name}|null. */
 export async function googleSignIn(idToken, name) {
   if (!cloudEnabled) return null;
