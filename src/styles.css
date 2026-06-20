@@ -431,6 +431,13 @@ button.card:active { transform: scale(.93); }
 @keyframes popLvl { 0% { transform: scale(2.2); opacity: 0; } 60% { transform: scale(.9); opacity: 1; } 100% { transform: scale(1); } }
 .banner .countup { font-family: var(--font-data); font-weight: 800; }
 
+/* Locked card-back tiles + unlock badge */
+.lock-badge { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); font-size: 20px; }
+.locked-back { opacity: .85; }
+.streak-chip { display: inline-flex; align-items: center; gap: 4px; background: linear-gradient(180deg, #C8341F, #9E2414); color: var(--ivory); padding: 6px 12px; border-radius: var(--r-pill); font-size: 13px; font-weight: 700; box-shadow: 0 4px 12px rgba(200,52,31,.35); animation: rise .6s cubic-bezier(.2,.9,.3,1.1) both; }
+.unlock-note { margin-top: 8px; padding: 8px 10px; border-radius: var(--r-sm); background: rgba(0,0,0,.25); font-size: 12px; font-weight: 700; animation: stampRow .5s cubic-bezier(.2,.9,.3,1.3) .3s backwards; display: flex; align-items: center; gap: 8px; }
+.unlock-note .card { width: 30px; height: 42px; }
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; transition-duration: .001ms !important; }
 }

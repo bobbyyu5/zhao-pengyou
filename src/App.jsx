@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import Game from "./ui/Game.jsx";
 import Settings from "./ui/Settings.jsx";
 import Rules from "./ui/Rules.jsx";
@@ -11,6 +11,7 @@ import SoundToggle from "./ui/SoundToggle.jsx";
 import { useLocalGame } from "./game/useLocalGame.js";
 import { useOnlineGame, SERVER_URL } from "./net/useOnlineGame.js";
 import { useWebRTC } from "./net/useWebRTC.js";
+import { recordSession, getProgress } from "./progress/progress.js";
 import { CONFIG, MIN_PLAYERS, MAX_PLAYERS } from "../engine/index.js";
 
 const COUNTS = Array.from({ length: MAX_PLAYERS - MIN_PLAYERS + 1 }, (_, i) => MIN_PLAYERS + i);
@@ -38,6 +39,7 @@ function Root() {
   const [showRules, setShowRules] = useState(false);
   const [wechatDismissed, setWechatDismissed] = useState(false);
   const { t } = useLang();
+  useEffect(() => { recordSession(); }, []); // update the daily streak on open
   const local = useLocalGame();
   const online = useOnlineGame();
   const rtc = useWebRTC({ socket: online.socket, you: online.you, players: online.room?.players });
@@ -99,6 +101,7 @@ function Root() {
 
 function Home({ onLocal, onOnline, onSettings, onRules }) {
   const { t } = useLang();
+  const prog = getProgress();
   return (
     <div className="splash">
       <div style={{ position: "absolute", top: 16, right: 12, display: "flex", gap: 6, alignItems: "center" }}><SoundToggle /><LangSwitch /></div>
@@ -106,6 +109,12 @@ function Home({ onLocal, onOnline, onSettings, onRules }) {
         <div className="wordmark">找朋友</div>
         <div className="sub">{t("subtitle")}</div>
       </div>
+      {prog.streak > 0 && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 4, alignItems: "center" }}>
+          <span className="streak-chip">{t("streakChip", { n: prog.streak })}</span>
+          {prog.handsPlayed > 0 && <span className="muted" style={{ fontSize: 11 }}>{t("yourProgress", { played: prog.handsPlayed, won: prog.handsWon })}</span>}
+        </div>
+      )}
       <Seal />
       <div className="stack" style={{ width: "100%", maxWidth: 320 }}>
         <button className="btn btn-primary" onClick={onLocal}>{t("vsBots")} <span className="en" style={{ color: "inherit", opacity: .7 }}>{t("vsBotsSub")}</span></button>

@@ -9,6 +9,8 @@ import SoundToggle from "./SoundToggle.jsx";
 import { SealReveal } from "./Seal.jsx";
 import { useLang, LangSwitch, seatName } from "../i18n/i18n.jsx";
 import { sound } from "../sound/sound.js";
+import { recordHandResult } from "../progress/progress.js";
+import { BUILTIN_BACKS } from "../theme/theme.jsx";
 import { SUIT_SYMBOL, SUIT_IS_RED, rankLabel } from "../../engine/index.js";
 
 const SUITS = ["S", "H", "C", "D"];
@@ -273,13 +275,18 @@ function ScorePanel({ view, names, onNext }) {
   // did MY side win? dealer side = dealer + friends
   const myDealerSide = view.you === r.dealerSeat || r.friendSeats.includes(view.you);
   const iWon = myDealerSide ? dealerWon : !dealerWon;
+  const [unlocked, setUnlocked] = useState([]);
 
   useEffect(() => {
     if (iWon) sound.win(); else sound.lose();
-    // level-up fanfare if my own seat climbed
     const mine = r.changes.find((c) => c.seat === view.you);
     if (mine && iWon) setTimeout(() => sound.levelUp(), 450);
+    // record the hand toward streak/stats/unlocks (once per score screen)
+    const newly = recordHandResult({ won: iWon, roundWon: view.roundOver && iWon });
+    if (newly.length) { setUnlocked(newly); setTimeout(() => sound.levelUp(), 700); }
   }, []);
+
+  const backName = (id) => BUILTIN_BACKS.find((b) => b.id === id)?.name || id;
 
   return (
     <div className={`banner ${iWon ? "win" : "lose"}`}>
@@ -300,6 +307,12 @@ function ScorePanel({ view, names, onNext }) {
         ))}
         {r.solo && <div className="muted">{t("soloDealer")}</div>}
       </div>
+      {unlocked.map((id) => (
+        <div key={id} className="unlock-note">
+          <div className={`card back cb-${id} ${BUILTIN_BACKS.find((b) => b.id === id)?.seal ? "seal-glyph" : ""}`} />
+          <span>{t("newBackUnlocked", { name: backName(id) })}</span>
+        </div>
+      ))}
       <button className="btn" style={{ background: "rgba(255,255,255,.92)", color: "var(--felt-deep)" }} onClick={onNext}>
         {view.roundOver ? t("seeResult") : t("nextHand")}
       </button>

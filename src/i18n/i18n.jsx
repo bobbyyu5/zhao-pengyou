@@ -144,6 +144,16 @@ const DICT = {
   chooseBack: { zh: "选择牌背", en: "Choose card back", ja: "カード裏を選択" },
   backsUpdateNote: { zh: "新牌背会不定期更新（无需重新安装）。", en: "New designs arrive over time automatically — no reinstall needed.", ja: "新しいデザインは随時自動で追加されます（再インストール不要）。" },
 
+  // progression / unlocks
+  locked: { zh: "未解锁", en: "Locked", ja: "未解放" },
+  unlockHandsWon: { zh: "赢 {n} 手解锁", en: "Win {n} hand(s)", ja: "{n}局勝利で解放" },
+  unlockHandsPlayed: { zh: "玩 {n} 手解锁", en: "Play {n} hands", ja: "{n}局プレイで解放" },
+  unlockRoundsWon: { zh: "赢一轮解锁", en: "Win a round", ja: "ラウンド勝利で解放" },
+  unlockStreak: { zh: "连续 {n} 天解锁", en: "{n}-day streak", ja: "{n}日連続で解放" },
+  newBackUnlocked: { zh: "🎉 解锁新牌背：{name}！", en: "🎉 New card back unlocked: {name}!", ja: "🎉 新しいカード裏を解放：{name}！" },
+  streakChip: { zh: "🔥 连续 {n} 天", en: "🔥 {n}-day streak", ja: "🔥 {n}日連続" },
+  yourProgress: { zh: "战绩：{played} 手 · {won} 胜", en: "{played} hands · {won} wins", ja: "{played}局 · {won}勝" },
+
   // rules / scoring reference
   rulesBtn: { zh: "规则", en: "Rules", ja: "ルール" },
   rulesTitle: { zh: "规则与算分", en: "Rules & Scoring", ja: "ルールと得点" },
