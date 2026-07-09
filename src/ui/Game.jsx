@@ -16,12 +16,17 @@ import { SUIT_SYMBOL, SUIT_IS_RED, rankLabel } from "../../engine/index.js";
 const SUITS = ["S", "H", "C", "D"];
 
 /** The whole in-game experience for one seat (`view`), local or online. */
-export default function Game({ view, names, seal, toast, actions, onExit, videoTiles, videoControls, draw, emotes }) {
+export default function Game({ view, names, seal, toast, actions, onExit, videoTiles, videoControls, draw, emotes, chatLog }) {
   const { t } = useLang();
   const [sel, setSel] = useState(() => new Set());
   const [showStats, setShowStats] = useState(false);
   const [showRules, setShowRules] = useState(false);
+  const [showChat, setShowChat] = useState(false);
   const [confirmExit, setConfirmExit] = useState(false);
+  const seenChat = useRef(0);
+  const chatCount = chatLog?.length || 0;
+  const unread = showChat ? 0 : Math.max(0, chatCount - seenChat.current);
+  if (showChat) seenChat.current = chatCount;
   useEffect(() => { setSel(new Set()); }, [view.phase, view.turn, view.handNumber]);
 
   const historyRef = useRef([]);
@@ -95,6 +100,7 @@ export default function Game({ view, names, seal, toast, actions, onExit, videoT
       {trickMsg && <div className="trick-toast">{trickMsg}</div>}
       {showStats && <Stats history={historyRef.current} names={names} players={view.players} you={view.you} onClose={() => setShowStats(false)} />}
       {showRules && <Rules config={view.config} onClose={() => setShowRules(false)} />}
+      {showChat && <ChatLog log={chatLog} view={view} names={names} onClose={() => setShowChat(false)} />}
       {confirmExit && (
         <div className="seal-overlay" onClick={() => setConfirmExit(false)}>
           <div className="panel" style={{ maxWidth: 320, margin: 16 }} onClick={(e) => e.stopPropagation()}>
@@ -115,6 +121,11 @@ export default function Game({ view, names, seal, toast, actions, onExit, videoT
           <SoundToggle />
           {videoControls}
           <button className="tag" onClick={() => setShowRules(true)}>{t("rulesBtn")}</button>
+          {chatLog && (
+            <button className="tag chat-tag" onClick={() => setShowChat(true)}>
+              💬{unread > 0 && <span className="chat-unread">{unread}</span>}
+            </button>
+          )}
           <button className="tag" onClick={() => setShowStats(true)}>{t("stats")}</button>
           <button className="tag" onClick={() => (view.roundOver ? onExit() : setConfirmExit(true))}>
             {view.roundOver ? t("roundOverTag") : t("handTag", { n: view.handNumber, p: view.players })}
@@ -186,6 +197,34 @@ function Waiting({ text }) {
   return <div className="panel center"><div className="zh">{text}</div></div>;
 }
 
+/** Scrollable history of table talk — every reaction/phrase, newest at the bottom. */
+function ChatLog({ log, view, names, onClose }) {
+  const { t } = useLang();
+  const endRef = useRef(null);
+  const items = log || [];
+  useEffect(() => { endRef.current?.scrollIntoView({ block: "end" }); }, [items.length]);
+  return (
+    <div className="seal-overlay" onClick={onClose}>
+      <div className="panel chat-panel" onClick={(e) => e.stopPropagation()}>
+        <div className="row" style={{ justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+          <p className="head" style={{ margin: 0, fontSize: 16 }}>💬 {t("tableTalk")}</p>
+          <button className="tag" onClick={onClose}>{t("close")}</button>
+        </div>
+        <div className="chat-scroll">
+          {items.length === 0 && <p className="muted center" style={{ fontSize: 12 }}>{t("noReactionsYet")}</p>}
+          {items.map((m) => (
+            <div key={m.id} className={`chat-line ${m.seat === view.you ? "mine" : ""}`}>
+              <span className="chat-who">{seatName(m.seat, view.players, view.you, names, t)}</span>
+              <span className={`chat-msg ${m.kind === "emoji" ? "is-emoji" : ""}`}>{m.value}</span>
+            </div>
+          ))}
+          <div ref={endRef} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /**
  * Table-talk: a floating 😊 button that opens a tray of emoji reactions + quick phrases. Each
  * tap pops over the sender's seat on every screen (see Table's emote layer). Phrases are sent
@@ -223,6 +262,15 @@ function EmoteBar({ onEmote }) {
 function LiveDraw({ view, draw, actions, names }) {
   const { t, suitName } = useLang();
   const level = view.level;
+
+  if (draw.shuffling) {
+    return (
+      <div className="panel center">
+        <ShuffleDeck />
+        <p className="head" style={{ margin: "10px 0 0", fontSize: 16 }}>{t("shuffling")}</p>
+      </div>
+    );
+  }
   const counts = { S: 0, H: 0, C: 0, D: 0 };
   let jokers = 0;
   for (const c of view.yourHand) { if (c.suit === "JOKER") jokers++; else if (c.rank === level) counts[c.suit]++; }
@@ -277,6 +325,17 @@ function LiveDraw({ view, draw, actions, names }) {
       <button className="btn btn-primary" disabled={!hasOptions} onClick={() => actions.openBid()}>
         {t("bidBtn")}
       </button>
+    </div>
+  );
+}
+
+/** A quick riffle-shuffle animation: two half-stacks interleave. Pure CSS, no assets. */
+function ShuffleDeck() {
+  return (
+    <div className="shuffle-deck" aria-hidden="true">
+      {Array.from({ length: 8 }, (_, i) => (
+        <span key={i} className={`shuffle-card ${i % 2 ? "right" : "left"}`} style={{ "--n": i }} />
+      ))}
     </div>
   );
 }
@@ -400,10 +459,18 @@ function ScorePanel({ view, names, onNext }) {
   const iWon = myDealerSide ? dealerWon : !dealerWon;
   const [unlocked, setUnlocked] = useState([]);
 
+  // celebration weight: a passed round > big sweep / 钩到底 > small sweep > ordinary win
+  const isRoundWin = view.roundOver && iWon;
+  const isBigWin = iWon && (r.tier === "big_sweep" || r.gouDaoDi);
+  const hero = isRoundWin ? "🏆" : isBigWin ? "🎉" : (iWon && r.tier === "small_sweep") ? "✨" : null;
+  const confettiCount = isRoundWin ? 120 : isBigWin ? 90 : r.tier === "small_sweep" ? 70 : 48;
+
   useEffect(() => {
     if (iWon) sound.win(); else sound.lose();
+    try { navigator.vibrate?.(isBigWin || isRoundWin ? [0, 40, 60, 40, 60, 90] : iWon ? 30 : 0); } catch {}
     const mine = r.changes.find((c) => c.seat === view.you);
     if (mine && iWon) setTimeout(() => sound.levelUp(), 450);
+    if (isBigWin || isRoundWin) setTimeout(() => sound.levelUp(), 900); // a second flourish for the big ones
     // record the hand toward streak/stats/unlocks (once per score screen)
     const newly = recordHandResult({ won: iWon, roundWon: view.roundOver && iWon });
     if (newly.length) { setUnlocked(newly); setTimeout(() => sound.levelUp(), 700); }
@@ -412,8 +479,9 @@ function ScorePanel({ view, names, onNext }) {
   const backName = (id) => BUILTIN_BACKS.find((b) => b.id === id)?.name || id;
 
   return (
-    <div className={`banner ${iWon ? "win" : "lose"}`}>
-      {iWon && <Confetti />}
+    <div className={`banner ${iWon ? "win" : "lose"} ${isBigWin || isRoundWin ? "big-win" : ""}`}>
+      {iWon && <Confetti count={confettiCount} />}
+      {hero && <div className="win-hero">{hero}</div>}
       <div className="head" style={{ fontSize: 18 }}>{r.gouDaoDi ? t("gouDaoDi") : t(`tier_${r.tier}`)}</div>
       <div className="en" style={{ color: "rgba(255,255,255,.85)" }}>
         {t("grabbers")} <CountUp to={r.grabberPoints} /> / {r.passLine}

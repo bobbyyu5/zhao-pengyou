@@ -20,7 +20,7 @@ export function useOnlineGame() {
   const ref = useRef({
     socket: null, connected: false, error: null,
     room: null, you: null, view: null, names: null, seal: null, toast: null, phase: "menu",
-    emotes: [], emoteSeq: 0,
+    emotes: [], emoteSeq: 0, chatLog: [],
   });
 
   function update(patch) { Object.assign(ref.current, patch); force(); }
@@ -50,6 +50,7 @@ export function useOnlineGame() {
     socket.on("emote", ({ seat, kind, value }) => {
       const id = ++ref.current.emoteSeq;
       ref.current.emotes = [...ref.current.emotes, { id, seat, kind, value }];
+      ref.current.chatLog = [...ref.current.chatLog, { id, seat, kind, value }].slice(-60);
       force();
       const ttl = kind === "text" ? 3600 : 2600;
       setTimeout(() => { ref.current.emotes = ref.current.emotes.filter((e) => e.id !== id); force(); }, ttl);
@@ -73,6 +74,7 @@ export function useOnlineGame() {
     seal: c.seal,
     toast: c.toast,
     emotes: c.emotes,
+    chatLog: c.chatLog,
     phase: c.phase, // menu | lobby | game
     actions: {
       createRoom: (name, players) => { connect()?.emit("createRoom", { name, players }); },

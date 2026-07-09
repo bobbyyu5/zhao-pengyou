@@ -26,9 +26,9 @@ export function useLocalGame() {
   const [, force] = useReducer((x) => x + 1, 0);
   const ref = useRef({
     state: null, you: 0, seal: null, toast: null, names: null, lastTricks: 0,
-    draw: null,        // { active, paused, exposed:{seat,cards}, windowEndsAt, lastCall }
+    draw: null,        // { active, paused, shuffling, exposed:{seat,cards}, windowEndsAt, lastCall }
     tickMs: 600,
-    emotes: [], emoteSeq: 0,
+    emotes: [], emoteSeq: 0, chatLog: [],
   });
   const timers = useRef([]);
   useEffect(() => () => timers.current.forEach(clearTimeout), []);
@@ -41,6 +41,7 @@ export function useLocalGame() {
   function pushEmote(seat, kind, value) {
     const id = ++ref.current.emoteSeq;
     ref.current.emotes = [...ref.current.emotes, { id, seat, kind, value }];
+    ref.current.chatLog = [...ref.current.chatLog, { id, seat, kind, value }].slice(-60);
     sound.pop();
     force();
     schedule(() => { ref.current.emotes = ref.current.emotes.filter((e) => e.id !== id); force(); }, kind === "text" ? 3600 : 2600);
@@ -58,11 +59,11 @@ export function useLocalGame() {
   }
 
   function beginDraw(s) {
-    ref.current.draw = { active: true, paused: false, exposed: null, windowEndsAt: null, lastCall: false };
+    ref.current.draw = { active: true, paused: false, shuffling: true, exposed: null, windowEndsAt: null, lastCall: false };
     ref.current.tickMs = Math.max(320, Math.min(680, Math.round(DRAW_TARGET_MS / s.config.perPlayer)));
     sound.shuffle();  // the riffle before the deal
-    set(s); // phase "draw", nothing dealt yet
-    schedule(dealTick, 500);
+    set(s); // phase "draw", nothing dealt yet — the shuffle animation plays over this beat
+    schedule(dealTick, 950); // let the shuffle land before cards start flying
   }
 
   function dealTick() {
@@ -71,6 +72,7 @@ export function useLocalGame() {
     if (!s || s.phase !== "draw" || !d || !d.active) return;
     if (d.paused) { schedule(dealTick, 150); return; } // wait out an open bid window
     if (drawComplete(s)) { startFinalCall(); return; }
+    if (d.shuffling) d.shuffling = false; // first card out — the shuffle is done
     set(dealRound(s));
     sound.deal();  // a card lands on the felt each round
     botBidCheck();
@@ -229,6 +231,7 @@ export function useLocalGame() {
     toast: ref.current.toast,
     draw: ref.current.draw,
     emotes: ref.current.emotes,
+    chatLog: ref.current.chatLog,
     actions: {
       start, openBid, humanBid, cancelBid, humanBury, humanCall, humanPlay, nextHand, dismissSeal,
       emote: (kind, value) => pushEmote(ref.current.you, kind, value),

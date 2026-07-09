@@ -528,3 +528,44 @@ button.card:active { transform: scale(.93); }
 }
 .phrase-btn:active { transform: scale(.94); background: var(--cinnabar); border-color: var(--cinnabar-deep); }
 .emote-hint { font-size: 10px; text-align: center; margin-top: 8px; }
+
+/* ── Shuffle animation (live-draw opening beat) ──────────────────────────────── */
+.shuffle-deck { position: relative; width: 120px; height: 66px; margin: 4px auto 0; }
+.shuffle-card {
+  position: absolute; top: 5px; left: 50%; margin-left: -20px; width: 40px; height: 56px;
+  border-radius: 6px; background: linear-gradient(135deg, var(--cinnabar), var(--cinnabar-deep));
+  border: 1px solid rgba(255,255,255,.22); box-shadow: 0 3px 8px rgba(0,0,0,.35);
+  animation: riffleL .5s ease-in-out infinite alternate; animation-delay: calc(var(--n) * 42ms);
+}
+.shuffle-card.right { animation-name: riffleR; }
+@keyframes riffleL { from { transform: translateX(-30px) rotate(-11deg); } to { transform: translateX(2px) rotate(2deg); } }
+@keyframes riffleR { from { transform: translateX(30px) rotate(11deg); } to { transform: translateX(-2px) rotate(-2deg); } }
+
+/* ── Richer win celebration ──────────────────────────────────────────────────── */
+.win-hero {
+  font-size: 56px; line-height: 1; margin-bottom: 2px;
+  filter: drop-shadow(0 4px 10px rgba(0,0,0,.4));
+  animation: heroPop .6s cubic-bezier(.2,.9,.3,1.5) both, heroBob 2.4s ease-in-out .6s infinite;
+}
+@keyframes heroPop { 0% { transform: scale(0) rotate(-20deg); opacity: 0; } 60% { transform: scale(1.25) rotate(6deg); opacity: 1; } 100% { transform: scale(1) rotate(0); } }
+@keyframes heroBob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+.banner.big-win { box-shadow: 0 0 0 2px var(--brass), 0 0 44px rgba(232,206,107,.45), var(--shadow-lift); }
+
+/* ── Table-talk log ──────────────────────────────────────────────────────────── */
+.chat-tag { position: relative; }
+.chat-unread {
+  position: absolute; top: -6px; right: -6px; background: var(--cinnabar); color: var(--ivory);
+  font-size: 9px; font-weight: 800; min-width: 15px; height: 15px; border-radius: 8px;
+  display: inline-flex; align-items: center; justify-content: center; padding: 0 3px; line-height: 1;
+}
+.chat-panel { max-width: 340px; width: calc(100% - 32px); margin: 16px; max-height: 70vh; display: flex; flex-direction: column; }
+.chat-scroll { overflow-y: auto; max-height: 52vh; display: flex; flex-direction: column; gap: 7px; padding-right: 2px; }
+.chat-line { display: flex; flex-direction: column; gap: 2px; align-items: flex-start; max-width: 82%; }
+.chat-line.mine { align-self: flex-end; align-items: flex-end; }
+.chat-who { font-size: 10px; color: var(--brass); font-weight: 700; }
+.chat-msg {
+  background: var(--felt-rail); color: var(--ivory); border: 1px solid var(--paper-line);
+  border-radius: 12px; padding: 6px 11px; font-size: 13px; font-weight: 600;
+}
+.chat-line.mine .chat-msg { background: var(--cinnabar); border-color: var(--cinnabar-deep); }
+.chat-msg.is-emoji { font-size: 24px; padding: 3px 10px; background: transparent; border: none; }

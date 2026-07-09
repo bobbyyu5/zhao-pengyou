@@ -260,6 +260,9 @@ const DICT = {
   // table banter / reactions
   reactions: { zh: "互动", en: "React", ja: "リアクション" },
   reactionsHint: { zh: "点一下，桌上每个人都看得到", en: "Tap — everyone at the table sees it", ja: "タップで全員に表示" },
+  tableTalk: { zh: "桌上互动", en: "Table talk", ja: "トーク" },
+  noReactionsYet: { zh: "还没有人互动。点右下角 😊 试试！", en: "No reactions yet — tap 😊 (bottom-right)!", ja: "まだありません。😊 を押してみて！" },
+  shuffling: { zh: "洗牌中…", en: "Shuffling…", ja: "シャッフル中…" },
 
   // seat names (4p relative)
   seat_next: { zh: "下家", en: "Next", ja: "下家" },
