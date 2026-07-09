@@ -23,8 +23,12 @@ export function SealReveal({ seatName, onDone }) {
   }, [onDone]);
   if (!show) return null;
   return (
-    <div className="seal-overlay" onClick={() => { setShow(false); onDone?.(); }} role="alert">
-      <Seal />
+    <div className="seal-overlay friend-reveal" onClick={() => { setShow(false); onDone?.(); }} role="alert">
+      <div className="seal-burst">
+        <span className="ray-ring" aria-hidden="true" />
+        <span className="glow-ring" aria-hidden="true" />
+        <Seal />
+      </div>
       <div className="caption">
         <div className="head" style={{ fontSize: 22 }}>{t("friendFound")}</div>
         <div className="en">{t("joinsSide", { name: seatName })}</div>

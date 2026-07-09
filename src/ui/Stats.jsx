@@ -21,6 +21,7 @@ export default function Stats({ history, names, players, you = 0, onClose }) {
           <div className="panel center muted">{t("noHands")}</div>
         ) : (
           <>
+            <Standings history={history} players={players} names={names} you={you} />
             <div className="panel">
               <p className="head" style={{ margin: "0 0 8px" }}>{t("levelProgress")}</p>
               <LevelChart history={history} players={players} names={names} />
@@ -40,6 +41,46 @@ export default function Stats({ history, names, players, you = 0, onClose }) {
           </>
         )}
       </div>
+    </div>
+  );
+}
+
+/** Per-seat session standings: current level + win/loss record across the hands played so far. */
+function Standings({ history, players, names, you }) {
+  const { t } = useLang();
+  const last = history[history.length - 1];
+  const wins = Array(players).fill(0), losses = Array(players).fill(0);
+  for (const h of history) {
+    const side = new Set([h.dealerSeat, ...(h.friendSeats || [])]);
+    for (let s = 0; s < players; s++) {
+      const won = side.has(s) ? h.dealerWon : !h.dealerWon;
+      if (won) wins[s]++; else losses[s]++;
+    }
+  }
+  // rank by current level, then wins
+  const order = Array.from({ length: players }, (_, s) => s)
+    .sort((a, b) => (last.levels[b] ?? 6) - (last.levels[a] ?? 6) || wins[b] - wins[a]);
+  return (
+    <div className="panel">
+      <p className="head" style={{ margin: "0 0 8px" }}>{t("standings")} · {t("handsShort", { n: history.length })}</p>
+      <table className="standings">
+        <thead>
+          <tr><th>#</th><th>{t("colSeat")}</th><th>{t("colLevel")}</th><th>{t("colRecord")}</th></tr>
+        </thead>
+        <tbody>
+          {order.map((s, rank) => (
+            <tr key={s} className={s === you ? "me" : ""}>
+              <td className="rank">{rank + 1}</td>
+              <td>
+                <i style={{ width: 9, height: 9, borderRadius: 2, background: SEAT_COLORS[s % SEAT_COLORS.length], display: "inline-block", marginRight: 6 }} />
+                {seatName(s, players, you, names, t)}
+              </td>
+              <td className="lvl-cell">打{rankLabel(last.levels[s] ?? 6)}</td>
+              <td className="rec-cell"><b>{wins[s]}</b> / {losses[s]}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }

@@ -247,6 +247,11 @@ const DICT = {
   noHands: { zh: "本局还没有完成的牌可统计。", en: "No completed hands yet.", ja: "まだ完了した局がありません。" },
   levelProgress: { zh: "等级进度", en: "Level progression", ja: "レベル推移" },
   pointsPerHand: { zh: "每手抓分", en: "Grabber points / hand", ja: "局ごとの得点" },
+  standings: { zh: "本局排名", en: "Standings", ja: "順位" },
+  colSeat: { zh: "玩家", en: "Player", ja: "プレイヤー" },
+  colLevel: { zh: "等级", en: "Level", ja: "レベル" },
+  colRecord: { zh: "胜/负", en: "W / L", ja: "勝/負" },
+  handsShort: { zh: "{n} 手", en: "{n} hands", ja: "{n}局" },
 
   // seal / friend
   friendFound: { zh: "找到朋友！", en: "Friend found!", ja: "友が見つかった！" },

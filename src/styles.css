@@ -569,3 +569,32 @@ button.card:active { transform: scale(.93); }
 }
 .chat-line.mine .chat-msg { background: var(--cinnabar); border-color: var(--cinnabar-deep); }
 .chat-msg.is-emoji { font-size: 24px; padding: 3px 10px; background: transparent; border: none; }
+
+/* ── Friend-found table moment: sunburst rays + golden glow behind the stamping seal ──── */
+.seal-burst { position: relative; display: flex; align-items: center; justify-content: center; }
+.friend-reveal .ray-ring {
+  position: absolute; width: 320px; height: 320px; border-radius: 50%; pointer-events: none;
+  background: repeating-conic-gradient(from 0deg, rgba(232,206,107,.30) 0deg 7deg, transparent 7deg 20deg);
+  -webkit-mask: radial-gradient(circle, #000 34%, transparent 72%);
+  mask: radial-gradient(circle, #000 34%, transparent 72%);
+  animation: raySpin 14s linear infinite, sealFade .5s ease both;
+}
+.friend-reveal .glow-ring {
+  position: absolute; width: 250px; height: 250px; border-radius: 50%; pointer-events: none;
+  background: radial-gradient(circle, rgba(232,206,107,.38), transparent 62%);
+  animation: glowPulse 1.5s ease-in-out infinite;
+}
+@keyframes raySpin { to { transform: rotate(360deg); } }
+@keyframes sealFade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes glowPulse { 0%,100% { opacity: .5; transform: scale(.94); } 50% { opacity: 1; transform: scale(1.06); } }
+
+/* ── Session standings table (in Stats) ───────────────────────────────────────────────── */
+table.standings { width: 100%; border-collapse: collapse; font-size: 13px; }
+.standings th { text-align: left; font-size: 10px; color: var(--brass); font-weight: 700; padding: 2px 6px; letter-spacing: .5px; }
+.standings th:last-child, .standings .rec-cell { text-align: right; }
+.standings td { padding: 7px 6px; border-top: 1px solid var(--paper-line); }
+.standings tr.me td { background: rgba(232,206,107,.09); }
+.standings .rank { color: var(--brass-light); font-family: var(--font-data); font-weight: 800; width: 20px; }
+.standings .lvl-cell { font-family: var(--font-data); color: var(--brass-light); }
+.standings .rec-cell { font-family: var(--font-data); }
+.standings .rec-cell b { color: var(--jade); }

@@ -6,9 +6,11 @@ import Stats from "./Stats.jsx";
 import Rules from "./Rules.jsx";
 import Confetti from "./Confetti.jsx";
 import SoundToggle from "./SoundToggle.jsx";
+import HapticToggle from "./HapticToggle.jsx";
 import { SealReveal } from "./Seal.jsx";
 import { useLang, LangSwitch, seatName, EMOJI_REACTIONS, TABLE_PHRASES } from "../i18n/i18n.jsx";
 import { sound } from "../sound/sound.js";
+import { buzz } from "../haptics/haptics.js";
 import { recordHandResult } from "../progress/progress.js";
 import { BUILTIN_BACKS } from "../theme/theme.jsx";
 import { SUIT_SYMBOL, SUIT_IS_RED, rankLabel } from "../../engine/index.js";
@@ -41,6 +43,7 @@ export default function Game({ view, names, seal, toast, actions, onExit, videoT
       tier: view.result.tier,
       dealerSeat: view.result.dealerSeat,
       dealerWon: view.result.dealerWon,
+      friendSeats: view.result.friendSeats || [],
     }];
   }
 
@@ -56,7 +59,7 @@ export default function Game({ view, names, seal, toast, actions, onExit, videoT
     return ids;
   }, [myTurn, view.handNumber, view.trick.length, view.phase, you]);
 
-  function haptic(ms) { try { navigator.vibrate?.(ms); } catch {} }
+  function haptic(ms) { buzz(ms); }
   function toggle(id) {
     haptic(8); sound.tap();
     setSel((prev) => { const next = new Set(prev); next.has(id) ? next.delete(id) : next.add(id); return next; });
@@ -119,6 +122,7 @@ export default function Game({ view, names, seal, toast, actions, onExit, videoT
         <span style={{ display: "flex", gap: 6, alignItems: "center" }}>
           <LangSwitch />
           <SoundToggle />
+          <HapticToggle />
           {videoControls}
           <button className="tag" onClick={() => setShowRules(true)}>{t("rulesBtn")}</button>
           {chatLog && (
@@ -467,7 +471,7 @@ function ScorePanel({ view, names, onNext }) {
 
   useEffect(() => {
     if (iWon) sound.win(); else sound.lose();
-    try { navigator.vibrate?.(isBigWin || isRoundWin ? [0, 40, 60, 40, 60, 90] : iWon ? 30 : 0); } catch {}
+    buzz(isBigWin || isRoundWin ? [0, 40, 60, 40, 60, 90] : iWon ? 30 : 0);
     const mine = r.changes.find((c) => c.seat === view.you);
     if (mine && iWon) setTimeout(() => sound.levelUp(), 450);
     if (isBigWin || isRoundWin) setTimeout(() => sound.levelUp(), 900); // a second flourish for the big ones
