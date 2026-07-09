@@ -53,6 +53,12 @@ test("normal: dealer loses (grabbers ≥ line) → dealer -2, friend -1; dealers
   assert.equal(r._nextDealer, 1, "dealer loss passes the deal anti-clockwise");
 });
 
+test("after a banker win, the winning banker's friend deals next round", () => {
+  const r = scoreHand(scorable({ level: 8, grabberPoints: 30, dealer: 0, friend: 2 })); // dealer wins
+  assert.equal(r.result.dealerWon, true);
+  assert.equal(r._nextDealer, 2, "the friend (seat 2) opens the next round");
+});
+
 test("J special — dealer at J wins → jumps to K (13)", () => {
   const r = scoreHand(scorable({ level: 11, grabberPoints: 30 })); // small_sweep, a win
   assert.equal(r.result.dealerWon, true);

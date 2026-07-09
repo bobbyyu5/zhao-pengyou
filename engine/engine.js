@@ -325,6 +325,8 @@ export function callFriends(s, seat, cards) {
   if (s.phase !== "call") throw new Error("not in call phase");
   if (seat !== s.dealer) throw new Error("only the dealer calls");
   if (cards.length !== s.friendsToCall) throw new Error(`must call exactly ${s.friendsToCall}`);
+  // The level rank is trump — it can't be a friend card (e.g. no calling an Ace when playing A).
+  if (cards.some((c) => c.rank === s.level)) throw new Error("不能叫本级牌（它是主牌）· can't call the level rank (it's trump)");
   const out = clone(s);
   out.friendCards = cards.map((c) => ({ suit: c.suit, rank: c.rank }));
   out.friendSeats = [];
@@ -647,9 +649,12 @@ export function scoreHand(s) {
   out.roundWinner = roundWinner;
   out.phase = "scoring";
 
-  // pick next dealer
+  // Next dealer (opens the calling next round). House rule: after a banker win, the winning
+  // banker's FRIEND deals next; solo win keeps the same dealer; a loss passes anti-clockwise.
   if (!roundOver) {
-    out._nextDealer = dealerWon ? dealer : nextSeat(out.players, dealer);
+    if (dealerWon && friends.length > 0) out._nextDealer = friends[0];
+    else if (dealerWon) out._nextDealer = dealer;
+    else out._nextDealer = nextSeat(out.players, dealer);
   }
   pushLog(out, scoreSummaryZh(out.result), scoreSummaryEn(out.result));
   return out;

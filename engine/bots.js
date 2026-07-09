@@ -53,18 +53,19 @@ export function botBury(state, seat) {
   return pool.slice(0, n).map((x) => x.c);
 }
 
-/** Pick the friend card(s) to call (dealer). Calls high cards the dealer does NOT hold many of. */
+/** Pick the friend card(s) to call (dealer). Calls a high non-trump rank (never the level rank). */
 export function botCallFriends(state, seat) {
   const need = state.friendsToCall;
-  // Call Aces by default (off-trump if possible), de-duplicating suits.
   const trump = state.trumpSuit;
+  // Highest rank that isn't the level rank (which is trump and can't be called).
+  const callRank = [14, 13, 12, 11, 10].find((r) => r !== state.level) || 13;
   const suitsByPreference = ["S", "H", "C", "D"].filter((s) => s !== trump).concat(trump ? [trump] : []);
   const calls = [];
   for (const s of suitsByPreference) {
     if (calls.length >= need) break;
-    calls.push({ suit: s, rank: 14 });
+    calls.push({ suit: s, rank: callRank });
   }
-  while (calls.length < need) calls.push({ suit: "S", rank: 13 });
+  while (calls.length < need) calls.push({ suit: suitsByPreference[0] || "S", rank: callRank });
   return calls.slice(0, need);
 }
 

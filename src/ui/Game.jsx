@@ -307,9 +307,10 @@ function BuryPanel({ view, selectedCards, onBury }) {
 function CallPanel({ view, onCall }) {
   const { t, suitName } = useLang();
   const need = view.friendsToCall;
+  // The level rank is trump — it can't be a friend card, so drop it from the choices.
+  const ranks = [14, 13, 12, 11, 10].filter((r) => r !== view.level);
   const [picks, setPicks] = useState([]);
-  const [rank, setRank] = useState(14);
-  const ranks = [14, 13, 12, 11, 10];
+  const [rank, setRank] = useState(ranks[0]);
 
   function add(suit) {
     if (picks.length >= need) return;

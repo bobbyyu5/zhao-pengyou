@@ -52,7 +52,6 @@ export default function Table({ view, names, videoTiles, exposed }) {
               <div className="avatar">
                 {videoTiles?.[s] || seatGlyph(s, names)}
                 {isDealer && <span className="badge-dealer">{t("dealerBadge")}</span>}
-                {isFriend && <div className="badge-friend"><Seal /></div>}
               </div>
               <div className="name">{seatName(s, players, you, names, t)}{isFriend ? <span className="friend-label"> · {t("roleFriend")}</span> : ""}</div>
               <div className="lvl">打{rankLabel(levelsBySeat[s])}{count > 0 ? ` · ${count}` : ""}</div>

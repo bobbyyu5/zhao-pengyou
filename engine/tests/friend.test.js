@@ -11,11 +11,15 @@ function setupToCall(seed) {
   s = buryKitty(s, s.dealer, s.hands[s.dealer].slice(0, s.config.kitty));
   return s;
 }
+// A card that can be called as a friend: not a joker and not the level rank (which is trump).
+function callable(hand, level) {
+  return hand.find((c) => c.suit !== "JOKER" && c.rank !== level) || hand[0];
+}
 
 test("the first player to play a called card becomes a friend", () => {
   let s = setupToCall("friend-a");
   // call a card that seat 1 holds, so we can have them play it
-  const target = s.hands[1][0];
+  const target = callable(s.hands[1], s.level);
   s = callFriends(s, s.dealer, [{ suit: target.suit, rank: target.rank }]);
   assert.equal(s.phase, "play");
   assert.deepEqual(s.friendSeats, [], "no friend revealed yet");
@@ -31,16 +35,22 @@ test("the first player to play a called card becomes a friend", () => {
 test("the dealer never becomes their own friend", () => {
   let s = setupToCall("friend-b");
   // call a card the dealer holds
-  const target = s.hands[s.dealer][0];
+  const target = callable(s.hands[s.dealer], s.level);
   s = callFriends(s, s.dealer, [{ suit: target.suit, rank: target.rank }]);
   const card = s.hands[s.dealer].find((c) => c.suit === target.suit && c.rank === target.rank);
   s = playMove(s, s.dealer, [card]);
   assert.deepEqual(s.friendSeats, [], "dealer playing the called card does not reveal a friend");
 });
 
+test("cannot call the level rank as a friend (it's trump)", () => {
+  let s = setupToCall("friend-lvl"); // level 6
+  assert.throws(() => callFriends(s, s.dealer, [{ suit: "H", rank: 6 }]), /level rank/);
+  assert.doesNotThrow(() => callFriends(s, s.dealer, [{ suit: "H", rank: 14 }]));
+});
+
 test("the revealed friend is visible to all seats in their view", () => {
   let s = setupToCall("friend-c");
-  const target = s.hands[2][0];
+  const target = callable(s.hands[2], s.level);
   s = callFriends(s, s.dealer, [{ suit: target.suit, rank: target.rank }]);
   s.turn = 2; s.leader = 2; s.trick = []; s.ledFormation = null;
   const card = s.hands[2].find((c) => c.suit === target.suit && c.rank === target.rank);
