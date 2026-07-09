@@ -10,7 +10,7 @@ import { suitCategory, seqIndex, isTrump, trumpStrength, compareTops, pointValue
 import { ALLOW_THROWS } from "./config.js";
 
 /** @typedef {import("./cards.js").Card} Card */
-/** @typedef {"single"|"pair"|"tractor"|"throw"|"mixed"} FormationType */
+/** @typedef {"single"|"pair"|"triple"|"set"|"tractor"|"throw"|"mixed"} FormationType */
 /**
  * @typedef {Object} Formation
  * @property {FormationType} type
@@ -47,6 +47,24 @@ export function groupPairs(cards) {
 /** All distinct pairs available in a set of cards (each pair = two identical copies). */
 export function findPairs(cards) {
   return groupPairs(cards).pairs;
+}
+
+/** How many identical-groups of exactly `size` copies can be formed (e.g. size 2 = pairs, 3 = triples). */
+export function countGroups(cards, size) {
+  const byKey = new Map();
+  for (const c of cards) byKey.set(key(c), (byKey.get(key(c)) || 0) + 1);
+  let count = 0;
+  for (const n of byKey.values()) count += Math.floor(n / size);
+  return count;
+}
+
+/** All identical-groups of `size` copies from the cards (each returns `size` cards). */
+export function findGroups(cards, size) {
+  const byKey = new Map();
+  for (const c of cards) { const k = key(c); if (!byKey.has(k)) byKey.set(k, []); byKey.get(k).push(c); }
+  const out = [];
+  for (const g of byKey.values()) for (let i = 0; i + size <= g.length; i += size) out.push(g.slice(i, i + size));
+  return out;
 }
 
 /**
@@ -101,11 +119,15 @@ export function detectFormation(cards, level, trumpSuit) {
   const top = topCard(cards, level, trumpSuit);
   const base = { cards, length: n, category, top };
 
-  if (n === 1) return { ...base, type: "single", pairs: 0, valid: true };
+  if (n === 1) return { ...base, type: "single", pairs: 0, groupSize: 1, units: 1, valid: true };
 
-  if (n === 2) {
-    const isPair = cards[0].suit === cards[1].suit && cards[0].rank === cards[1].rank;
-    if (isPair) return { ...base, type: "pair", pairs: 1, valid: true };
+  // Identical set: all n cards the same rank+suit — pair (2), triple (3), or larger. The family
+  // plays three-of-a-kind (needs 3+ decks); Big/Small jokers can't mix (different ranks → not
+  // identical, so a joker "pair"/"triple" must be all-Big or all-Small — enforced here).
+  const allIdentical = cards.every((c) => c.suit === cards[0].suit && c.rank === cards[0].rank);
+  if (n >= 2 && allIdentical) {
+    const type = n === 2 ? "pair" : n === 3 ? "triple" : "set";
+    return { ...base, type, pairs: n === 2 ? 1 : 0, groupSize: n, units: 1, valid: true };
   }
 
   // Tractor: even length, all one category, k consecutive pairs covering exactly these cards.
@@ -118,7 +140,7 @@ export function detectFormation(cards, level, trumpSuit) {
         const consecutive = idx.every((v, i) => i === 0 || v === idx[i - 1] + 1);
         const distinct = new Set(idx).size === idx.length;
         if (consecutive && distinct) {
-          return { ...base, type: "tractor", pairs: pairs.length, valid: true };
+          return { ...base, type: "tractor", pairs: pairs.length, groupSize: 2, units: pairs.length, valid: true };
         }
       }
     }
@@ -164,30 +186,39 @@ export function sumPoints(cards) {
  */
 export function validateFollow(hand, led, cards, level, trumpSuit) {
   const n = led.length;
-  if (cards.length !== n) return { ok: false, reason: `必须出 ${n} 张牌 (must play ${n} cards)` };
+  if (cards.length !== n) return { ok: false, reason: `必须出 ${n} 张牌 · must play ${n} cards` };
 
   const inHandCat = hand.filter((c) => suitCategory(c, level, trumpSuit) === led.category);
   const playedCat = cards.filter((c) => suitCategory(c, level, trumpSuit) === led.category);
+  const isTrumpLead = led.category === "T";
 
-  // Rule A: you must commit all your category cards, up to n (can't hold suit while dumping).
+  // Rule A: you must commit all your category cards, up to n (can't hold the suit and dump).
+  // Trump leads say "follow trump" — a rank card like 3♦ IS trump even though it's a diamond.
   const mustCat = Math.min(inHandCat.length, n);
   if (playedCat.length < mustCat) {
-    return { ok: false, reason: `有该门花色时必须跟花色 (must follow the led suit: ${mustCat} card(s))` };
+    const what = isTrumpLead
+      ? `必须跟主牌（含级牌/王）· must follow trump (${mustCat})`
+      : `必须跟${SUIT_ZH[led.category] || "该门"}花色 · must follow the ${led.category} suit (${mustCat})`;
+    return { ok: false, reason: what };
   }
 
-  // Rule B: when the lead is paired (pair/tractor), keep pairs together — use as many
-  // category pairs as the lead needs and you can supply.
-  if (led.pairs >= 1) {
-    const availPairs = findPairs(inHandCat).length;
-    const neededPairs = Math.min(availPairs, led.pairs);
-    const playedPairs = findPairs(playedCat).length;
-    if (playedPairs < neededPairs) {
-      return { ok: false, reason: `有对子时必须跟对子 (must keep ${neededPairs} pair(s) together)` };
+  // Rule B: keep identical-groups together. A pair/triple lead needs one group of that size; a
+  // tractor needs its k pairs. Use as many groups as the lead needs and you can supply.
+  const G = led.groupSize || 1;
+  if (G >= 2) {
+    const avail = countGroups(inHandCat, G);
+    const need = Math.min(avail, led.units || 1);
+    const played = countGroups(playedCat, G);
+    if (played < need) {
+      const label = G === 2 ? "对子 pair(s)" : G === 3 ? "三张 triple(s)" : `${G} 张 set(s)`;
+      return { ok: false, reason: `必须跟${need} 组${label} · must keep ${need} ${label} together` };
     }
   }
 
   return { ok: true };
 }
+
+const SUIT_ZH = { S: "黑桃", H: "红桃", C: "梅花", D: "方块" };
 
 /**
  * Compare two SAME-TYPE formations for trick winner. Returns >0 if `challenger` beats

@@ -48,6 +48,31 @@ test("findTractors finds a 3-link run", () => {
   assert.equal(tractors[0].length, 3);
 });
 
+test("detect a triple (three identical copies)", () => {
+  const t = detectFormation([card("S", 9, 0), card("S", 9, 1), card("S", 9, 2)], LEVEL, TRUMP);
+  assert.equal(t.type, "triple");
+  assert.equal(t.length, 3);
+  assert.equal(t.groupSize, 3);
+});
+
+test("three of the same RANK but different suits is NOT a triple", () => {
+  const f = detectFormation([card("S", 9), card("H", 9), card("C", 9)], LEVEL, TRUMP);
+  assert.equal(f.valid, false); // must be identical suit+rank
+});
+
+test("Big + Small joker cannot form a pair (different ranks)", () => {
+  const f = detectFormation([card("JOKER", 16), card("JOKER", 15)], LEVEL, TRUMP);
+  assert.equal(f.valid, false);
+});
+
+test("must keep a triple together when following a triple lead", () => {
+  const hand = [card("S", 3, 0), card("S", 3, 1), card("S", 3, 2), card("S", 9)];
+  const led = detectFormation([card("S", 14, 0), card("S", 14, 1), card("S", 14, 2)], LEVEL, TRUMP);
+  // breaking the triple (2 of it + a single) is illegal when you hold the full triple
+  assert.equal(validateFollow(hand, led, [card("S", 3, 0), card("S", 3, 1), card("S", 9)], LEVEL, TRUMP).ok, false);
+  assert.equal(validateFollow(hand, led, [card("S", 3, 0), card("S", 3, 1), card("S", 3, 2)], LEVEL, TRUMP).ok, true);
+});
+
 test("findPairs counts identical copies", () => {
   const cards = [card("S", 9, 0), card("S", 9, 1), card("S", 10, 0)];
   assert.equal(findPairs(cards).length, 1);

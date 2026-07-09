@@ -13,7 +13,8 @@ import {
   buildDeck, sortHand, isTrump, suitCategory, pointValue, SMALL_JOKER, BIG_JOKER,
 } from "./cards.js";
 import {
-  detectFormation, validateFollow, findPairs, findTractors, isWinnerCandidate, beats, sumPoints,
+  detectFormation, validateFollow, findPairs, findTractors, findGroups, countGroups,
+  isWinnerCandidate, beats, sumPoints,
 } from "./formations.js";
 
 /** @typedef {import("./cards.js").Card} Card */
@@ -349,9 +350,10 @@ export function legalMoves(s, seat) {
   const level = s.level, trump = s.trumpSuit;
 
   if (s.trick.length === 0) {
-    // Leading: any single, any pair, any tractor.
+    // Leading: any single, pair, triple, or tractor.
     const moves = hand.map((c) => ({ type: "single", cards: [c] }));
     for (const p of findPairs(hand)) moves.push({ type: "pair", cards: p });
+    for (const g of findGroups(hand, 3)) moves.push({ type: "triple", cards: g });
     for (const t of findTractors(hand, level, trump)) {
       moves.push({ type: "tractor", cards: t.flat() });
     }
@@ -365,7 +367,6 @@ export function legalMoves(s, seat) {
   // Build a faithful set of legal following plays without enumerating the full power set.
   /** @type {{type:string,cards:Card[]}[]} */
   const out = [];
-  const catPairs = findPairs(inCat);
 
   if (led.type === "single") {
     const pool = inCat.length ? inCat : hand;
@@ -373,37 +374,25 @@ export function legalMoves(s, seat) {
     return dedupeMoves(out);
   }
 
-  if (led.type === "pair") {
-    if (catPairs.length) {
-      for (const p of catPairs) out.push({ type: "pair", cards: p });
-      return dedupeMoves(out);
-    }
-    if (inCat.length >= 2) {
-      // must play 2 of the category (no pair available)
-      out.push({ type: "follow", cards: inCat.slice(0, 2) });
-      return out;
-    }
-    if (inCat.length === 1) {
-      const other = hand.find((c) => c.id !== inCat[0].id);
-      out.push({ type: "follow", cards: [inCat[0], other].filter(Boolean) });
-      return out;
-    }
-    // free: prefer a trump pair to ruff, else any 2
-    const trumpPairs = findPairs(hand.filter((c) => isTrump(c, level, trump)));
-    for (const p of trumpPairs) out.push({ type: "pair", cards: p });
-    if (hand.length >= 2) out.push({ type: "follow", cards: pickLowest(hand, level, trump, 2) });
-    return out.length ? dedupeMoves(out) : [{ type: "follow", cards: hand.slice(0, n) }];
+  // Grouped leads (pair / triple / set / tractor): build one compliant follow, plus trump
+  // ruffs of the same formation when void in the category.
+  const G = led.groupSize || 2;
+  const catGroups = findGroups(inCat, G);
+  if (catGroups.length && (led.units || 1) === 1) {
+    // pair/triple/set led and we hold matching groups → offer each as a candidate
+    for (const g of catGroups) out.push({ type: led.type, cards: g });
+    return dedupeMoves(out);
   }
-
-  // tractor lead: produce one compliant play (follow suit, keep pairs, match count).
-  out.push({ type: "follow", cards: buildTractorFollow(hand, inCat, catPairs, led, level, trump) });
-  // also offer a same-length trump tractor to ruff, when free of the category
+  out.push({ type: "follow", cards: buildGroupFollow(hand, inCat, led, level, trump) });
   if (inCat.length === 0) {
-    for (const t of findTractors(hand, level, trump)) {
-      if (t.length === led.pairs) out.push({ type: "tractor", cards: t.flat() });
+    const trumps = hand.filter((c) => isTrump(c, level, trump));
+    if (led.type === "pair" || led.type === "triple" || led.type === "set") {
+      for (const g of findGroups(trumps, G)) out.push({ type: led.type, cards: g });
+    } else if (led.type === "tractor") {
+      for (const t of findTractors(hand, level, trump)) if (t.length === led.units) out.push({ type: "tractor", cards: t.flat() });
     }
   }
-  return dedupeMoves(out);
+  return out.length ? dedupeMoves(out) : [{ type: "follow", cards: hand.slice(0, n) }];
 }
 
 /**
@@ -429,21 +418,19 @@ function pickLowest(hand, level, trump, k) {
   return sorted.slice(-k);
 }
 
-function buildTractorFollow(hand, inCat, catPairs, led, level, trump) {
+// Build one compliant follow for a grouped lead (pair/triple/set/tractor): commit the required
+// identical-groups of the led size, then category singles, then the lowest of the rest.
+function buildGroupFollow(hand, inCat, led, level, trump) {
   const n = led.length;
+  const G = led.groupSize || 2;
+  const need = Math.min(countGroups(inCat, G), led.units || 1);
   const chosen = [];
   const used = new Set();
-  // 1) commit category pairs first (keep pairs together)
-  for (const p of catPairs) {
-    if (chosen.length + 2 > n) break;
-    chosen.push(p[0], p[1]); used.add(p[0].id); used.add(p[1].id);
+  const groups = findGroups(inCat, G);
+  for (let i = 0; i < need && i < groups.length; i++) {
+    for (const c of groups[i]) if (chosen.length < n) { chosen.push(c); used.add(c.id); }
   }
-  // 2) fill with remaining category singles
-  for (const c of inCat) {
-    if (chosen.length >= n) break;
-    if (!used.has(c.id)) { chosen.push(c); used.add(c.id); }
-  }
-  // 3) fill from the rest of the hand (lowest first)
+  for (const c of inCat) { if (chosen.length >= n) break; if (!used.has(c.id)) { chosen.push(c); used.add(c.id); } }
   if (chosen.length < n) {
     for (const c of sortHand(hand, level, trump).reverse()) {
       if (chosen.length >= n) break;
