@@ -8,6 +8,7 @@ process.env.PORT = process.env.PORT || "8799";
 process.env.BID_WINDOW_MS = "400";
 process.env.BOT_DELAY_MS = "60";
 process.env.TURN_TIMEOUT_MS = "4000";
+process.env.TRICK_HOLD_MS = "0"; // don't hold finished tricks in the test — run the hand at speed
 
 import { io as Client } from "socket.io-client";
 import { clientLegalMoves } from "../engine/index.js";

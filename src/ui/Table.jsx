@@ -10,7 +10,7 @@ import { rankLabel } from "../../engine/index.js";
  * other seats are distributed evenly around an ellipse. Works for 4–10 by spreading the
  * remaining seats across the arc — the real spatial problem from the design brief.
  */
-export default function Table({ view, names, videoTiles, exposed }) {
+export default function Table({ view, names, videoTiles, exposed, emotes }) {
   const theme = useTheme();
   const { t } = useLang();
   const backCls = `cb-${theme?.cardBack || "cinnabar-seal"}`;
@@ -95,6 +95,13 @@ export default function Table({ view, names, videoTiles, exposed }) {
           );
         })}
       </div>
+
+      {/* live reactions — float over the sender's seat for everyone at the table */}
+      {(emotes || []).map((e) => (
+        <div key={e.id} className={`emote-float ${e.kind === "text" ? "is-text" : ""}`} style={pos(e.seat)}>
+          {e.kind === "text" ? <span className="emote-bubble">{e.value}</span> : <span className="emote-emoji">{e.value}</span>}
+        </div>
+      ))}
     </div>
   );
 }

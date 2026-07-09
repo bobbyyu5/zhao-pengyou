@@ -395,6 +395,22 @@ io.on("connection", (socket) => {
 
   socket.on("rtc-leave", () => withSeat(socket, (room, seat) => leaveCall(room, seat)));
 
+  // Table banter: a tap on an emoji / canned phrase pops over the sender's seat on EVERY
+  // screen in the room (the sender included, so their own reaction confirms). Kept tiny and
+  // rate-limited so it can't be used to spam. `kind` is "emoji" | "text"; text is capped.
+  socket.on("emote", ({ kind, value }) => withSeat(socket, (room, seat) => {
+    if (kind !== "emoji" && kind !== "text") return;
+    const v = String(value || "").slice(0, kind === "emoji" ? 8 : 40);
+    if (!v) return;
+    const now = Date.now();
+    room._emoteAt = room._emoteAt || {};
+    if (now - (room._emoteAt[seat] || 0) < 700) return; // ~1.4/sec per seat
+    room._emoteAt[seat] = now;
+    room.seats.forEach((s) => {
+      if (s && !s.bot && s.socketId && s.connected) io.to(s.socketId).emit("emote", { seat, kind, value: v });
+    });
+  }));
+
   socket.on("leaveRoom", () => handleLeave(socket));
   socket.on("disconnect", () => handleDisconnect(socket));
 });

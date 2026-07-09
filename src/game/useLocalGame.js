@@ -5,6 +5,10 @@ import {
   nextHand as engineNextHand, viewFor,
   botBid, botBury, botCallFriends, botPlay,
 } from "../../engine/index.js";
+import { sound } from "../sound/sound.js";
+
+// Bots occasionally react so a solo table still feels alive (celebrate a win, etc.).
+const BOT_EMOTES = ["👍", "😄", "🎉", "👏", "🤔", "🔥"];
 
 const BOT_DELAY = 650;
 const TRICK_PAUSE = 2500;     // hold a completed trick face-up so players can see who won (2-3s)
@@ -24,6 +28,7 @@ export function useLocalGame() {
     state: null, you: 0, seal: null, toast: null, names: null, lastTricks: 0,
     draw: null,        // { active, paused, exposed:{seat,cards}, windowEndsAt, lastCall }
     tickMs: 600,
+    emotes: [], emoteSeq: 0,
   });
   const timers = useRef([]);
   useEffect(() => () => timers.current.forEach(clearTimeout), []);
@@ -31,6 +36,19 @@ export function useLocalGame() {
   const set = (state) => { ref.current.state = state; force(); };
   const schedule = (fn, ms) => { const t = setTimeout(fn, ms); timers.current.push(t); };
   const toast = (msg) => { ref.current.toast = msg; force(); schedule(() => { ref.current.toast = null; force(); }, 2200); };
+
+  // A reaction floats over `seat` for everyone at this (single-device) table.
+  function pushEmote(seat, kind, value) {
+    const id = ++ref.current.emoteSeq;
+    ref.current.emotes = [...ref.current.emotes, { id, seat, kind, value }];
+    sound.pop();
+    force();
+    schedule(() => { ref.current.emotes = ref.current.emotes.filter((e) => e.id !== id); force(); }, kind === "text" ? 3600 : 2600);
+  }
+  function botEmoteMaybe(seat) {
+    if (seat === ref.current.you || Math.random() > 0.18) return;
+    pushEmote(seat, "emoji", BOT_EMOTES[Math.floor(Math.random() * BOT_EMOTES.length)]);
+  }
 
   // ── start a hand: begin the live draw ──────────────────────────────────────
   function start(players, seed) {
@@ -42,6 +60,7 @@ export function useLocalGame() {
   function beginDraw(s) {
     ref.current.draw = { active: true, paused: false, exposed: null, windowEndsAt: null, lastCall: false };
     ref.current.tickMs = Math.max(320, Math.min(680, Math.round(DRAW_TARGET_MS / s.config.perPlayer)));
+    sound.shuffle();  // the riffle before the deal
     set(s); // phase "draw", nothing dealt yet
     schedule(dealTick, 500);
   }
@@ -53,6 +72,7 @@ export function useLocalGame() {
     if (d.paused) { schedule(dealTick, 150); return; } // wait out an open bid window
     if (drawComplete(s)) { startFinalCall(); return; }
     set(dealRound(s));
+    sound.deal();  // a card lands on the felt each round
     botBidCheck();
     schedule(dealTick, ref.current.tickMs);
   }
@@ -160,6 +180,7 @@ export function useLocalGame() {
     detectSeal(prev, ns);
     set(ns);
     if (ns.trickResolved) {
+      botEmoteMaybe(ns.trickResolved.winner);  // the winner may celebrate
       schedule(() => {
         const cleared = clearTrick(ns);
         set(cleared);
@@ -207,8 +228,10 @@ export function useLocalGame() {
     seal: ref.current.seal,
     toast: ref.current.toast,
     draw: ref.current.draw,
+    emotes: ref.current.emotes,
     actions: {
       start, openBid, humanBid, cancelBid, humanBury, humanCall, humanPlay, nextHand, dismissSeal,
+      emote: (kind, value) => pushEmote(ref.current.you, kind, value),
       legalMovesFor: (seat) => (state ? legalMoves(state, seat) : []),
     },
   };

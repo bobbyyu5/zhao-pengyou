@@ -257,6 +257,10 @@ const DICT = {
   // video controls (titles)
   videoTag: { zh: "📷 视频", en: "📷 Video", ja: "📷 映像" },
 
+  // table banter / reactions
+  reactions: { zh: "互动", en: "React", ja: "リアクション" },
+  reactionsHint: { zh: "点一下，桌上每个人都看得到", en: "Tap — everyone at the table sees it", ja: "タップで全員に表示" },
+
   // seat names (4p relative)
   seat_next: { zh: "下家", en: "Next", ja: "下家" },
   seat_across: { zh: "对家", en: "Across", ja: "対面" },
@@ -264,6 +268,20 @@ const DICT = {
   seat_player: { zh: "玩家{r}", en: "Player {r}", ja: "プレイヤー{r}" },
   dealerBadge: { zh: "庄", en: "D", ja: "親" },
 };
+
+// Quick canned phrases for table talk — tap to send as a speech bubble over your seat. Sent in
+// the sender's current language (authentic banter — you hear it the way they'd say it).
+export const EMOJI_REACTIONS = ["👍", "😂", "😮", "🎉", "👏", "❤️", "🤔", "🔥"];
+export const TABLE_PHRASES = [
+  { zh: "该你了！", en: "Your turn!", ja: "あなたの番！" },
+  { zh: "好牌！", en: "Nice play!", ja: "ナイス！" },
+  { zh: "哈哈哈", en: "Hahaha", ja: "ははは" },
+  { zh: "厉害！", en: "Well played!", ja: "お見事！" },
+  { zh: "等一下", en: "One sec", ja: "ちょっと待って" },
+  { zh: "再来一局", en: "Again!", ja: "もう一局！" },
+  { zh: "加油！", en: "Come on!", ja: "がんばって！" },
+  { zh: "我要赢了", en: "I've got this", ja: "勝つよ" },
+];
 
 // suit names per language
 export const SUIT_NAME = {

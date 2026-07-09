@@ -7,7 +7,7 @@ import Rules from "./Rules.jsx";
 import Confetti from "./Confetti.jsx";
 import SoundToggle from "./SoundToggle.jsx";
 import { SealReveal } from "./Seal.jsx";
-import { useLang, LangSwitch, seatName } from "../i18n/i18n.jsx";
+import { useLang, LangSwitch, seatName, EMOJI_REACTIONS, TABLE_PHRASES } from "../i18n/i18n.jsx";
 import { sound } from "../sound/sound.js";
 import { recordHandResult } from "../progress/progress.js";
 import { BUILTIN_BACKS } from "../theme/theme.jsx";
@@ -16,7 +16,7 @@ import { SUIT_SYMBOL, SUIT_IS_RED, rankLabel } from "../../engine/index.js";
 const SUITS = ["S", "H", "C", "D"];
 
 /** The whole in-game experience for one seat (`view`), local or online. */
-export default function Game({ view, names, seal, toast, actions, onExit, videoTiles, videoControls, draw }) {
+export default function Game({ view, names, seal, toast, actions, onExit, videoTiles, videoControls, draw, emotes }) {
   const { t } = useLang();
   const [sel, setSel] = useState(() => new Set());
   const [showStats, setShowStats] = useState(false);
@@ -125,7 +125,7 @@ export default function Game({ view, names, seal, toast, actions, onExit, videoT
       <Hud trumpSuit={view.trumpSuit} level={view.level}
         grabberPoints={view.grabberPoints} passLine={view.passLine} />
 
-      <Table view={view} names={names} videoTiles={videoTiles} exposed={draw?.exposed} />
+      <Table view={view} names={names} videoTiles={videoTiles} exposed={draw?.exposed} emotes={emotes} />
 
       {view.phase === "draw" && (draw
         ? <LiveDraw view={view} draw={draw} actions={actions} names={names} />
@@ -138,6 +138,8 @@ export default function Game({ view, names, seal, toast, actions, onExit, videoT
       {view.phase === "call" && !isDealer && <Waiting text={t("dealerCalling")} />}
       {view.phase === "scoring" && <ScorePanel view={view} names={names} onNext={actions.nextHand} />}
       {view.phase === "done" && <RoundOver view={view} onExit={onExit} />}
+
+      {actions.emote && <EmoteBar onEmote={actions.emote} />}
 
       {view.yourHand.length > 0 && (
         <div className="hand-wrap">
@@ -182,6 +184,39 @@ export default function Game({ view, names, seal, toast, actions, onExit, videoT
 
 function Waiting({ text }) {
   return <div className="panel center"><div className="zh">{text}</div></div>;
+}
+
+/**
+ * Table-talk: a floating 😊 button that opens a tray of emoji reactions + quick phrases. Each
+ * tap pops over the sender's seat on every screen (see Table's emote layer). Phrases are sent
+ * in the sender's current language — banter the way they'd actually say it.
+ */
+function EmoteBar({ onEmote }) {
+  const { t, lang } = useLang();
+  const [open, setOpen] = useState(false);
+  function send(kind, value) { onEmote(kind, value); setOpen(false); }
+  return (
+    <div className={`emotebar ${open ? "open" : ""}`}>
+      {open && (
+        <div className="emote-tray" onClick={(e) => e.stopPropagation()}>
+          <div className="emote-row">
+            {EMOJI_REACTIONS.map((e) => (
+              <button key={e} className="emote-btn" onClick={() => send("emoji", e)}>{e}</button>
+            ))}
+          </div>
+          <div className="emote-phrases">
+            {TABLE_PHRASES.map((p, i) => (
+              <button key={i} className="phrase-btn" onClick={() => send("text", p[lang] || p.zh)}>{p[lang] || p.zh}</button>
+            ))}
+          </div>
+          <div className="emote-hint muted">{t("reactionsHint")}</div>
+        </div>
+      )}
+      <button className="emote-fab" onClick={() => setOpen((o) => !o)} aria-label={t("reactions")}>
+        {open ? "✕" : "😊"}
+      </button>
+    </div>
+  );
 }
 
 /** Live-draw UI (single-device): cards deal out; tap Bid to expose your 6s within a 5s window. */
