@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
-  newGame, dealAll, dealNext, bid, buryKitty, callFriends, playMove, legalMoves, viewFor,
+  newGame, dealAll, dealNext, bid, buryKitty, callFriends, playMove, clearTrick, legalMoves, viewFor,
 } from "../engine.js";
 import { botBid, botBury, botCallFriends, botPlay } from "../bots.js";
 import { getConfig } from "../config.js";
@@ -30,6 +30,7 @@ function playFullHand(players, seed) {
   let guard = 0;
   while (s.phase === "play") {
     if (++guard > 5000) throw new Error("play loop did not terminate");
+    if (s.trickResolved) { s = clearTrick(s); continue; } // trick is held face-up; advance
     const seat = s.turn;
     const move = botPlay(s, seat);
     assert.ok(move && move.cards && move.cards.length > 0, `seat ${seat} produced a move`);

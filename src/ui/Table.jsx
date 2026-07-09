@@ -15,6 +15,10 @@ export default function Table({ view, names, videoTiles, exposed }) {
   const { t } = useLang();
   const backCls = `cb-${theme?.cardBack || "cinnabar-seal"}`;
   const { players, you, dealer, friendSeats, turn, handCounts, levelsBySeat, trick, leader } = view;
+  const pointsBySeat = view.pointsBySeat || [];
+  // Per-player captured points show until the friend is revealed; then they combine (HUD total).
+  const friendRevealed = (view.friendCards?.length || 0) > 0 && friendSeats.length >= view.friendCards.length;
+  const showPerSeat = view.phase === "play" && !friendRevealed;
 
   // place seat `s` at an angle starting from the bottom (you), going clockwise
   function pos(s) {
@@ -52,6 +56,7 @@ export default function Table({ view, names, videoTiles, exposed }) {
               </div>
               <div className="name">{seatName(s, players, you, names, t)}{isFriend ? <span className="friend-label"> · {t("roleFriend")}</span> : ""}</div>
               <div className="lvl">打{rankLabel(levelsBySeat[s])}{count > 0 ? ` · ${count}` : ""}</div>
+              {showPerSeat && !isDealer && (pointsBySeat[s] || 0) > 0 && <div className="seat-score">{pointsBySeat[s]} 分</div>}
               <div className="backs">{Array.from({ length: backs }, (_, i) => <span key={i} className={`back ${backCls}`} />)}</div>
             </div>
           );
@@ -74,16 +79,22 @@ export default function Table({ view, names, videoTiles, exposed }) {
             ? <span className="turn-cue">{t("yourTurnLead")}</span>
             : <span className="muted" style={{ fontSize: 12 }}>{t("waitingPlay")}</span>
         )}
-        {trick.map((tp, i) => (
-          <div key={i} className="trick-play">
-            <div className="cards">
-              {tp.cards.map((c) => (
-                <Card key={c.id} card={c} size="sm" level={view.level} trumpSuit={view.trumpSuit} />
-              ))}
+        {trick.map((tp, i) => {
+          const isWinner = view.trickResolved && view.trickResolved.winner === tp.seat;
+          return (
+            <div key={i} className={`trick-play ${isWinner ? "trick-winner" : ""}`}>
+              <div className="cards">
+                {tp.cards.map((c) => (
+                  <Card key={c.id} card={c} size="sm" level={view.level} trumpSuit={view.trumpSuit} />
+                ))}
+              </div>
+              <span className="who">
+                {seatName(tp.seat, players, you, names, t)}{tp.seat === leader ? " ▸" : ""}
+                {isWinner && <span className="won-badge">{t("wonTag")}{view.trickResolved.points > 0 ? ` +${view.trickResolved.points}` : ""}</span>}
+              </span>
             </div>
-            <span className="who">{seatName(tp.seat, players, you, names, t)}{tp.seat === leader ? " ▸" : ""}</span>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

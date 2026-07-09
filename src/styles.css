@@ -126,6 +126,10 @@ button { font-family: var(--font-ui); cursor: pointer; border: none; }
   padding: 3px 5px; border-radius: var(--r-pill); font-weight: 700;
 }
 .seat .badge-dealer { background: var(--brass); color: var(--felt-deep); }
+.seat .seat-score { font-size: 11px; color: var(--brass-light); font-family: var(--font-data); font-weight: 700; margin-top: 1px; }
+.trick-play.trick-winner { transform: scale(1.08); }
+.trick-play.trick-winner .cards { box-shadow: 0 0 0 2px var(--brass), 0 0 16px rgba(232,206,107,.5); border-radius: 8px; }
+.won-badge { display: inline-block; margin-left: 4px; background: var(--brass); color: var(--felt-deep); font-weight: 800; font-size: 9px; padding: 1px 5px; border-radius: var(--r-pill); font-family: var(--font-data); }
 
 /* ── Trick area ─────────────────────────────────────────────── */
 .trick-center {

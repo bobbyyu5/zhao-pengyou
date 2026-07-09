@@ -1,13 +1,13 @@
 import { useEffect, useReducer, useRef } from "react";
 import {
   newGame, dealRound, drawComplete, closeDraw, bid, exposedCardsForBid,
-  buryKitty, callFriends, playMove, legalMoves,
+  buryKitty, callFriends, playMove, clearTrick, legalMoves,
   nextHand as engineNextHand, viewFor,
   botBid, botBury, botCallFriends, botPlay,
 } from "../../engine/index.js";
 
 const BOT_DELAY = 650;
-const TRICK_PAUSE = 1500;     // linger after a trick resolves so players can see who won
+const TRICK_PAUSE = 2500;     // hold a completed trick face-up so players can see who won (2-3s)
 // ── live-draw (ENGINE_SPEC §4): deal out over ~15s; tap Bid to expose 6s on the table ──
 const DRAW_TARGET_MS = 15000; // total deal time, spread across the rounds
 const BID_WINDOW_MS = 5000;   // how long the human's expose window stays open
@@ -148,30 +148,38 @@ export function useLocalGame() {
     catch (e) { toast(e.message); }
   }
   function humanPlay(cards) {
-    let s;
-    try { s = playMove(ref.current.state, 0, cards); }
+    const prev = ref.current.state;
+    let ns;
+    try { ns = playMove(prev, 0, cards); }
     catch (e) { toast(e.message); return; }
-    detectSeal(ref.current.state, s);
-    set(s);
-    if (s.phase === "play") runBots(s);
+    applyPlay(prev, ns);
+  }
+
+  // Apply a play; if it completed a trick, hold it face-up ~2.5s before clearing + advancing.
+  function applyPlay(prev, ns) {
+    detectSeal(prev, ns);
+    set(ns);
+    if (ns.trickResolved) {
+      schedule(() => {
+        const cleared = clearTrick(ns);
+        set(cleared);
+        if (cleared.phase === "play") runBots(cleared);
+      }, TRICK_PAUSE);
+      return;
+    }
+    if (ns.phase === "play") runBots(ns);
   }
 
   function runBots(s) {
-    if (s.phase !== "play") { set(s); return; }
-    if (s.turn === ref.current.you) { set(s); return; }
-    if (s.tricksPlayed < (ref.current.lastTricks ?? 0)) ref.current.lastTricks = 0;
-    const justResolved = s.tricksPlayed > (ref.current.lastTricks ?? 0);
-    ref.current.lastTricks = s.tricksPlayed;
-    const delay = justResolved ? TRICK_PAUSE : BOT_DELAY;
+    if (s.phase !== "play" || s.trickResolved) { set(s); return; }
+    if (s.turn === ref.current.you) { set(s); return; } // wait for the human
     schedule(() => {
       const seat = s.turn;
       let ns;
       try { ns = playMove(s, seat, botPlay(s, seat).cards); }
       catch { const lm = legalMoves(s, seat); ns = playMove(s, seat, lm[0].cards); }
-      detectSeal(s, ns);
-      set(ns);
-      runBots(ns);
-    }, delay);
+      applyPlay(s, ns);
+    }, BOT_DELAY);
   }
 
   function detectSeal(prev, next) {

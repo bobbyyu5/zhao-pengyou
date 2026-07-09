@@ -68,13 +68,26 @@ export function botCallFriends(state, seat) {
   return calls.slice(0, need);
 }
 
+/** Is this card one the dealer called to find a friend? */
+function isCalledFriendCard(card, state) {
+  return (state.friendCards || []).some((f) => f.suit === card.suit && f.rank === card.rank);
+}
+
 /** Choose a play during a trick. Uses legalMoves + public points only. */
 export function botPlay(state, seat) {
-  const moves = legalMoves(state, seat);
+  let moves = legalMoves(state, seat);
   if (moves.length === 0) return null;
   const level = state.level, trump = state.trumpSuit;
   const dealerSide = dealerSideSeats(state);
   const onDealerSide = dealerSide.has(seat);
+
+  // Don't reveal by slapping down the called friend card (e.g. the Ace when a K is led) unless
+  // it's the only legal option — hold it. Once the bot is already a revealed friend, this is moot.
+  const alreadyFriend = state.friendSeats?.includes(seat);
+  if (!alreadyFriend && (state.friendCards || []).length) {
+    const noReveal = moves.filter((m) => !m.cards.some((c) => isCalledFriendCard(c, state)));
+    if (noReveal.length) moves = noReveal;
+  }
 
   const trickPts = sumPoints(state.trick.flatMap((t) => t.cards));
 

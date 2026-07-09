@@ -8,7 +8,7 @@
 import { createServer } from "node:http";
 import { Server } from "socket.io";
 import {
-  newGame, dealCardsOnly, closeDraw, bid, buryKitty, callFriends, playMove, legalMoves,
+  newGame, dealCardsOnly, closeDraw, bid, buryKitty, callFriends, playMove, clearTrick, legalMoves,
   nextHand as engineNextHand, viewFor,
   botBid, botBury, botCallFriends, botPlay,
   getConfig,
@@ -23,6 +23,7 @@ const ORIGIN = process.env.CLIENT_ORIGIN || "*";
 const BID_WINDOW_MS = Number(process.env.BID_WINDOW_MS || 12000);
 const BOT_DELAY_MS = Number(process.env.BOT_DELAY_MS || 700);
 const TURN_TIMEOUT_MS = Number(process.env.TURN_TIMEOUT_MS || 45000);
+const TRICK_HOLD_MS = Number(process.env.TRICK_HOLD_MS || 2500); // hold a finished trick face-up
 
 // ── Accounts + progress API (additive; dormant until DATABASE_URL/VITE_CLOUD_SYNC) ──
 function sendJSON(res, code, obj) {
@@ -227,7 +228,7 @@ function armDealerTimeout(room) {
 function drive(room) {
   clearTimeout(room.timers.turn);
   const s = room.state;
-  if (!s || s.phase !== "play") { broadcastViews(room); return; }
+  if (!s || s.phase !== "play" || s.trickResolved) { broadcastViews(room); return; }
   const seat = s.turn;
   const occupant = room.seats[seat];
   const isBot = occupant?.bot || !occupant?.connected;
@@ -261,6 +262,18 @@ function applyTransition(room, prev, next) {
     if (seat != null) { room.state = next; emitSeal(room, seat); }
   }
   room.state = next;
+  // Hold a completed trick face-up for a beat before clearing (so everyone sees who won).
+  if (next.trickResolved) {
+    broadcastViews(room);
+    clearTimeout(room.timers.bot);
+    room.timers.bot = setTimeout(() => {
+      const cleared = clearTrick(room.state);
+      room.state = cleared;
+      if (cleared.phase === "scoring" || cleared.phase === "done") broadcastViews(room);
+      else drive(room);
+    }, TRICK_HOLD_MS);
+    return;
+  }
   if (next.phase === "scoring" || next.phase === "done") {
     broadcastViews(room);
     return;
@@ -345,7 +358,7 @@ io.on("connection", (socket) => {
 
   socket.on("play", ({ cardIds }) => withSeat(socket, (room, seat) => {
     const s = room.state;
-    if (s?.phase !== "play" || s.turn !== seat) return;
+    if (s?.phase !== "play" || s.trickResolved || s.turn !== seat) return;
     const cards = s.hands[seat].filter((c) => cardIds.includes(c.id));
     let ns;
     try { ns = playMove(s, seat, cards); }

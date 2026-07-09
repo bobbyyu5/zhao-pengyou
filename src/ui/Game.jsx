@@ -40,7 +40,7 @@ export default function Game({ view, names, seal, toast, actions, onExit, videoT
   }
 
   const you = view.you;
-  const myTurn = view.turn === you && view.phase === "play";
+  const myTurn = view.turn === you && view.phase === "play" && !view.trickResolved;
   const isDealer = view.dealer === you;
 
   const legalIds = useMemo(() => {

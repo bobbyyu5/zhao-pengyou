@@ -52,6 +52,7 @@ function clone(s) {
     bids: s.bids.slice(),
     log: s.log.slice(),
     capturedPoints: s.capturedPoints.slice(),
+    pointsBySeat: (s.pointsBySeat || Array(s.players).fill(0)).slice(),
   };
 }
 
@@ -95,7 +96,9 @@ export function newGame(players, seed = randomSeed()) {
     trick: [],          // [{ seat, cards }]
     ledFormation: null,
     grabberPoints: 0,
-    capturedPoints: [], // 0/1 per trick: 1 if grabbers took that trick's points
+    capturedPoints: [], // per trick: points, if grabbers took that trick
+    pointsBySeat: Array(players).fill(0), // per-seat captured points (pre-friend-reveal display)
+    trickResolved: null, // { winner, points } while a completed trick is held face-up
     tricksPlayed: 0,
     lastTrickWinner: null,
     lastTrickByGrabber: false,
@@ -128,6 +131,8 @@ function startDraw(s) {
   out.ledFormation = null;
   out.grabberPoints = 0;
   out.capturedPoints = [];
+  out.pointsBySeat = Array(out.players).fill(0);
+  out.trickResolved = null;
   out.tricksPlayed = 0;
   out.lastTrickWinner = null;
   out.lastTrickByGrabber = false;
@@ -457,6 +462,7 @@ function dedupeMoves(moves) {
  */
 export function playMove(s, seat, cards) {
   if (s.phase !== "play") throw new Error("not in play phase");
+  if (s.trickResolved) throw new Error("trick not cleared yet");
   if (s.turn !== seat) throw new Error("not your turn");
   if (!Array.isArray(cards) || cards.length === 0) throw new Error("no cards");
 
@@ -533,6 +539,8 @@ function resolveTrick(s) {
   const grabbers = !dealerSideSeats(out).has(winnerSeat);
   if (grabbers && points > 0) out.grabberPoints += points;
   out.capturedPoints.push(grabbers ? points : 0);
+  if (!out.pointsBySeat) out.pointsBySeat = Array(out.players).fill(0);
+  out.pointsBySeat[winnerSeat] += points; // per-seat tally (shown before the friend is revealed)
   out.tricksPlayed += 1;
   out.lastTrickWinner = winnerSeat;
   out.lastTrickByGrabber = grabbers;
@@ -542,15 +550,25 @@ function resolveTrick(s) {
   pushLog(out, `${winnerSeat} 赢墩 (${points} 分)${grabbers ? " · 抓分方" : ""}。`,
     `Seat ${winnerSeat} wins the trick (${points} pts)${grabbers ? " — grabbers" : ""}.`);
 
-  out.trick = [];
-  out.ledFormation = null;
+  // HOLD the trick face-up (don't clear) so the UI can show it for a beat; clearTrick() advances.
+  out.trickResolved = { winner: winnerSeat, points };
   out.leader = winnerSeat;
   out.turn = winnerSeat;
+  return out;
+}
 
-  // hand over when all hands empty
-  if (out.hands.every((h) => h.length === 0)) {
-    return scoreHand(out);
-  }
+/**
+ * Clear a resolved trick and advance (winner leads next, or score the hand if all cards are
+ * played). Called by the controller/server after the trick-review pause. No-op if the trick
+ * hasn't been resolved.
+ */
+export function clearTrick(s) {
+  if (!s.trickResolved) return s;
+  const out = clone(s);
+  out.trick = [];
+  out.ledFormation = null;
+  out.trickResolved = null;
+  if (out.hands.every((h) => h.length === 0)) return scoreHand(out);
   return out;
 }
 
@@ -747,6 +765,8 @@ export function viewFor(s, seat) {
     leader: s.leader,
     trick: s.trick.map((t) => ({ seat: t.seat, cards: t.cards.slice() })),
     ledFormation: s.ledFormation ? { type: s.ledFormation.type, length: s.ledFormation.length } : null,
+    trickResolved: s.trickResolved,          // { winner, points } while the trick is held face-up
+    pointsBySeat: (s.pointsBySeat || []).slice(),
     grabberPoints: s.grabberPoints,
     passLine: s.config.passLine,
     handCounts: s.hands.map((h) => h.length),

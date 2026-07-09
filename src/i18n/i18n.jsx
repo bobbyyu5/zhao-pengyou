@@ -103,6 +103,7 @@ const DICT = {
   waitingPlay: { zh: "等待出牌…", en: "Waiting…", ja: "待機中…" },
   trickWon: { zh: "{name} 赢墩 · {pts} 分", en: "{name} won the trick · {pts} pts", ja: "{name} がこの場を取った · {pts}点" },
   trickWonNoPts: { zh: "{name} 赢墩", en: "{name} won the trick", ja: "{name} がこの場を取った" },
+  wonTag: { zh: "赢", en: "won", ja: "勝" },
   dealerCalling: { zh: "庄家正在叫朋友…", en: "Dealer is calling friends…", ja: "親が友を指名しています…" },
 
   // bidding
