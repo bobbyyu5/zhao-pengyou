@@ -16,7 +16,7 @@ import { SUIT_SYMBOL, SUIT_IS_RED, rankLabel } from "../../engine/index.js";
 const SUITS = ["S", "H", "C", "D"];
 
 /** The whole in-game experience for one seat (`view`), local or online. */
-export default function Game({ view, names, seal, toast, actions, onExit, videoTiles, videoControls }) {
+export default function Game({ view, names, seal, toast, actions, onExit, videoTiles, videoControls, draw }) {
   const { t } = useLang();
   const [sel, setSel] = useState(() => new Set());
   const [showStats, setShowStats] = useState(false);
@@ -125,9 +125,11 @@ export default function Game({ view, names, seal, toast, actions, onExit, videoT
       <Hud trumpSuit={view.trumpSuit} level={view.level}
         grabberPoints={view.grabberPoints} passLine={view.passLine} />
 
-      <Table view={view} names={names} videoTiles={videoTiles} />
+      <Table view={view} names={names} videoTiles={videoTiles} exposed={draw?.exposed} />
 
-      {view.phase === "draw" && <BidPanel view={view} onBid={actions.humanBid} />}
+      {view.phase === "draw" && (draw
+        ? <LiveDraw view={view} draw={draw} actions={actions} names={names} />
+        : <BidPanel view={view} onBid={actions.humanBid} />)}
       {view.phase === "bury" && isDealer && (
         <BuryPanel view={view} selectedCards={selectedCards} onBury={() => actions.humanBury(selectedCards)} />
       )}
@@ -180,6 +182,68 @@ export default function Game({ view, names, seal, toast, actions, onExit, videoT
 
 function Waiting({ text }) {
   return <div className="panel center"><div className="zh">{text}</div></div>;
+}
+
+/** Live-draw UI (single-device): cards deal out; tap Bid to expose your 6s within a 5s window. */
+function LiveDraw({ view, draw, actions, names }) {
+  const { t, suitName } = useLang();
+  const level = view.level;
+  const counts = { S: 0, H: 0, C: 0, D: 0 };
+  let jokers = 0;
+  for (const c of view.yourHand) { if (c.suit === "JOKER") jokers++; else if (c.rank === level) counts[c.suit]++; }
+  const hasOptions = jokers > 0 || Object.values(counts).some((n) => n > 0);
+  const cur = view.bid;
+  const curLabel = cur ? (cur.noTrump ? `${t("noTrump")}×${cur.count}` : `${suitName(cur.suit)}×${cur.count}`) : null;
+  const open = !!draw.windowEndsAt;
+
+  const [remain, setRemain] = useState(5);
+  useEffect(() => {
+    if (!open) return;
+    const tick = () => setRemain(Math.max(0, Math.ceil((draw.windowEndsAt - Date.now()) / 1000)));
+    tick();
+    const id = setInterval(tick, 200);
+    return () => clearInterval(id);
+  }, [open, draw.windowEndsAt]);
+
+  if (open) {
+    return (
+      <div className="panel">
+        <p className="head" style={{ margin: "0 0 4px" }}>{t("bidWindowTitle", { n: remain })}</p>
+        {cur && <p className="en" style={{ marginTop: 0 }}>{t("bidCurrent", { bid: curLabel })}</p>}
+        {!hasOptions ? (
+          <p className="muted" style={{ marginBottom: 8 }}>{t("nothingToExpose")}</p>
+        ) : (
+          <div className="seg" style={{ marginBottom: 8 }}>
+            {SUITS.map((s) => (
+              <button key={s} disabled={counts[s] < 1} onClick={() => actions.humanBid({ suit: s, count: counts[s] })}>
+                <span className={SUIT_IS_RED[s] ? "suit-red" : ""}>{SUIT_SYMBOL[s]}</span>{suitName(s)}{counts[s] > 0 ? ` ×${counts[s]}` : ""}
+              </button>
+            ))}
+          </div>
+        )}
+        <div className="row">
+          {jokers > 0 && <button className="btn btn-ghost btn-sm" onClick={() => actions.humanBid({ noTrump: true, count: jokers })}>{t("bidNoTrump", { n: jokers })}</button>}
+          <button className="btn btn-cinnabar btn-sm" onClick={() => actions.cancelBid()}>{t("cancel")}</button>
+        </div>
+      </div>
+    );
+  }
+
+  const total = view.config.perPlayer * view.players;
+  const pct = Math.round((view.dealtCount / total) * 100);
+  return (
+    <div className="panel">
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
+        <p className="head" style={{ margin: 0 }}>{draw.lastCall ? t("finalCall") : t("dealing")}</p>
+        {cur && <span className="muted" style={{ fontSize: 12 }}>{t("exposedBy", { name: seatName(cur.seat, view.players, view.you, names, t), label: curLabel })}</span>}
+      </div>
+      <div className="draw-progress"><span style={{ width: `${pct}%` }} /></div>
+      <p className="en" style={{ marginTop: 2 }}>{t("drawTapBid")}</p>
+      <button className="btn btn-primary" disabled={!hasOptions} onClick={() => actions.openBid()}>
+        {t("bidBtn")}
+      </button>
+    </div>
+  );
 }
 
 function BidPanel({ view, onBid }) {

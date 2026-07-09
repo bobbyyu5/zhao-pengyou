@@ -10,7 +10,7 @@ import { rankLabel } from "../../engine/index.js";
  * other seats are distributed evenly around an ellipse. Works for 4–10 by spreading the
  * remaining seats across the arc — the real spatial problem from the design brief.
  */
-export default function Table({ view, names, videoTiles }) {
+export default function Table({ view, names, videoTiles, exposed }) {
   const theme = useTheme();
   const { t } = useLang();
   const backCls = `cb-${theme?.cardBack || "cinnabar-seal"}`;
@@ -57,8 +57,18 @@ export default function Table({ view, names, videoTiles }) {
           );
         })}
 
-      {/* center trick */}
+      {/* center: exposed bid cards during the draw, otherwise the current trick */}
       <div className="trick-center">
+        {view.phase === "draw" && exposed && exposed.cards?.length > 0 && (
+          <div className="trick-play">
+            <div className="cards">
+              {exposed.cards.map((c) => (
+                <Card key={c.id} card={c} size="sm" level={view.level} trumpSuit={view.trumpSuit} />
+              ))}
+            </div>
+            <span className="who">{seatName(exposed.seat, players, you, names, t)} ▸ 主</span>
+          </div>
+        )}
         {trick.length === 0 && view.phase === "play" && (
           turn === you
             ? <span className="turn-cue">{t("yourTurnLead")}</span>

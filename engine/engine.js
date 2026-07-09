@@ -169,6 +169,40 @@ export function dealCardsOnly(s) {
   return out;
 }
 
+/**
+ * Deal ONE round — one card to each seat (anti-clockwise from the shuffler's right) — and
+ * stay in the draw. Powers the live, animated deal where players can expose rank cards to bid
+ * mid-deal (ENGINE_SPEC §4). Returns unchanged if the deal is already complete.
+ */
+export function dealRound(s) {
+  if (s.phase !== "draw") throw new Error("dealRound only during draw");
+  const out = clone(s);
+  const total = out.config.perPlayer * out.players;
+  for (let k = 0; k < out.players && out.dealtCount < total; k++) {
+    const seat = (out.shuffler + 1 + out.dealtCount) % out.players;
+    out.hands[seat].push(out.deck[out.dealtCount]);
+    out.dealtCount += 1;
+  }
+  out.hands = out.hands.map((h) => sortHand(h, out.level, out.trumpSuit));
+  return out;
+}
+
+/** True once every card has been dealt (the kitty is what's left). */
+export function drawComplete(s) {
+  return s.dealtCount >= s.config.perPlayer * s.players;
+}
+
+/**
+ * The actual cards a bid exposes — `count` copies of the level rank in a suit, or `count`
+ * jokers for a no-trump bid — pulled from that seat's hand, for showing face-up on the table.
+ */
+export function exposedCardsForBid(s, b) {
+  if (!b) return [];
+  const hand = s.hands[b.seat] || [];
+  if (b.noTrump) return hand.filter((c) => c.suit === "JOKER").slice(0, b.count);
+  return hand.filter((c) => c.suit === b.suit && c.rank === s.level).slice(0, b.count);
+}
+
 /** Close the draw: resolve dealer + trump and move to the bury phase. */
 export function closeDraw(s) {
   if (s.phase !== "draw") throw new Error("closeDraw only during draw");

@@ -113,6 +113,15 @@ const DICT = {
   bidNoTrump: { zh: "无主 (王 ×{n})", en: "No-trump (jokers ×{n})", ja: "切札なし (ジョーカー×{n})" },
   pass: { zh: "不叫", en: "Pass", ja: "パス" },
   passNoRank: { zh: "无本级牌 · 过", en: "no rank cards · pass", ja: "該当札なし · パス" },
+  // live draw
+  dealing: { zh: "发牌中…", en: "Dealing…", ja: "配牌中…" },
+  drawTapBid: { zh: "想坐庄定主？点「叫牌」亮出你的 6（或王）。", en: "Want to claim trump? Tap Bid to expose your 6s (or jokers).", ja: "親になりたい？「コール」で6（やジョーカー）を見せます。" },
+  bidBtn: { zh: "叫牌 · 亮主", en: "Bid", ja: "コール" },
+  bidWindowTitle: { zh: "亮牌定主 · {n} 秒", en: "Expose to claim trump · {n}s", ja: "公開して切札を宣言 · {n}秒" },
+  exposedBy: { zh: "{name} 亮出 {label}", en: "{name} exposed {label}", ja: "{name} が公開：{label}" },
+  finalCall: { zh: "最后叫牌！", en: "Last call!", ja: "ラストコール！" },
+  nothingToExpose: { zh: "你没有可亮的牌（无 6 无王）", en: "Nothing to expose (no 6s or jokers)", ja: "公開できる札がありません" },
+  cancel: { zh: "取消", en: "Cancel", ja: "キャンセル" },
   bidCantBeat: { zh: "你的牌无法超过当前最高叫牌，请过牌。", en: "Your cards can't beat the high bid — tap Pass.", ja: "今のコールを超えられません。パスしてください。" },
   bidHowto: { zh: "亮更多张本级牌（或王）才能压过别人；压不过就过牌。", en: "Expose more rank cards (or jokers) to outbid; if you can't, pass.", ja: "より多くの級札（またはジョーカー）で上回ります。無理ならパス。" },
 

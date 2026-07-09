@@ -432,6 +432,8 @@ button.card:active { transform: scale(.93); }
 .banner .countup { font-family: var(--font-data); font-weight: 800; }
 
 /* Turn cues + trick result feedback (followability for new/older players) */
+.draw-progress { height: 6px; background: var(--felt-deep); border-radius: var(--r-pill); overflow: hidden; margin: 8px 0; }
+.draw-progress span { display: block; height: 100%; background: linear-gradient(90deg, var(--brass), var(--brass-light)); transition: width .3s ease; }
 .turn-cue { font-size: 14px; font-weight: 700; color: var(--brass-light); animation: pulseCue 1.3s ease-in-out infinite; }
 @keyframes pulseCue { 0%,100% { opacity: .7; } 50% { opacity: 1; } }
 .turn-pill { background: var(--jade); color: var(--felt-deep); font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: var(--r-pill); animation: pulseCue 1.3s ease-in-out infinite; }
