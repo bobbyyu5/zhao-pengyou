@@ -11,7 +11,7 @@ import { sound } from "../sound/sound.js";
 const BOT_EMOTES = ["👍", "😄", "🎉", "👏", "🤔", "🔥"];
 
 const BOT_DELAY = 650;
-const TRICK_PAUSE = 2500;     // hold a completed trick face-up so players can see who won (2-3s)
+const TRICK_PAUSE = 5000;     // hold a completed trick face-up so players can study it (family asked for longer)
 // ── live-draw (ENGINE_SPEC §4): deal out over ~15s; tap Bid to expose 6s on the table ──
 const DRAW_TARGET_MS = 15000; // total deal time, spread across the rounds
 const BID_WINDOW_MS = 5000;   // how long the human's expose window stays open

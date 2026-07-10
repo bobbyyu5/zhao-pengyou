@@ -598,3 +598,13 @@ table.standings { width: 100%; border-collapse: collapse; font-size: 13px; }
 .standings .lvl-cell { font-family: var(--font-data); color: var(--brass-light); }
 .standings .rec-cell { font-family: var(--font-data); }
 .standings .rec-cell b { color: var(--jade); }
+
+/* Combined opponents' (grabber) total on the felt, shown once the dealer's partner is revealed.
+   Pinned to the top-right corner of the table box, which the seat ellipse never occupies. */
+.grabber-total {
+  position: absolute; top: 2px; right: 4px; z-index: 3;
+  background: var(--felt-deep); border: 1px solid var(--cinnabar);
+  color: var(--ivory); font-family: var(--font-data); font-weight: 800; font-size: 13px;
+  padding: 5px 11px; border-radius: var(--r-pill); box-shadow: var(--shadow-card);
+  animation: dropIn .3s ease;
+}

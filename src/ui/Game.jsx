@@ -79,7 +79,7 @@ export default function Game({ view, names, seal, toast, actions, onExit, videoT
         const pts = view.lastTrickPoints || 0;
         setTrickMsg(pts > 0 ? t("trickWon", { name, pts }) : t("trickWonNoPts", { name }));
         clearTimeout(trickTimer.current);
-        trickTimer.current = setTimeout(() => setTrickMsg(null), 1800);
+        trickTimer.current = setTimeout(() => setTrickMsg(null), 3600);
       }
     }
     if (view.tricksPlayed < prevTricks.current) prevTricks.current = view.tricksPlayed; // new hand

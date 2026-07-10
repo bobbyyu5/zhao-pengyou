@@ -23,7 +23,7 @@ const ORIGIN = process.env.CLIENT_ORIGIN || "*";
 const BID_WINDOW_MS = Number(process.env.BID_WINDOW_MS || 12000);
 const BOT_DELAY_MS = Number(process.env.BOT_DELAY_MS || 700);
 const TURN_TIMEOUT_MS = Number(process.env.TURN_TIMEOUT_MS || 45000);
-const TRICK_HOLD_MS = Number(process.env.TRICK_HOLD_MS || 2500); // hold a finished trick face-up
+const TRICK_HOLD_MS = Number(process.env.TRICK_HOLD_MS || 5000); // hold a finished trick face-up (family asked for longer)
 
 // ── Accounts + progress API (additive; dormant until DATABASE_URL/VITE_CLOUD_SYNC) ──
 function sendJSON(res, code, obj) {

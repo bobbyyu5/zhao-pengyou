@@ -34,6 +34,12 @@ export default function Table({ view, names, videoTiles, exposed, emotes }) {
     <div className="table-wrap">
       <div className="felt-oval" />
 
+      {/* once the dealer's partner is out, the opposing (grabber) side's points combine into one
+          running total on the felt; before that, each player's pile shows at their own seat */}
+      {view.phase === "play" && friendRevealed && (
+        <div className="grabber-total">{t("grabberTotalChip", { n: view.grabberPoints || 0 })}</div>
+      )}
+
       {/* opponents (everyone except you) */}
       {Array.from({ length: players }, (_, s) => s)
         .filter((s) => s !== you)

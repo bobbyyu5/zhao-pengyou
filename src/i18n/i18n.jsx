@@ -93,6 +93,7 @@ const DICT = {
   noTrump: { zh: "无主", en: "No trump", ja: "切札なし" },
   level: { zh: "LEVEL", en: "LEVEL", ja: "LEVEL" },
   grabbers: { zh: "抓分 Grabbers", en: "Grabbers", ja: "得点側" },
+  grabberTotalChip: { zh: "对方抓分 {n}", en: "Opponents {n}", ja: "相手側 {n}" },
   yourHand: { zh: "你的手牌", en: "Your hand", ja: "あなたの手札" },
   friendCardsLabel: { zh: "朋友牌：", en: "Friend cards: ", ja: "友カード：" },
   play: { zh: "出牌", en: "Play", ja: "出す" },
